@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Polyline Generator</title>
+    <script>
+        function encodeValue(value) {
+            value = value < 0 ? ~(value << 1) : value << 1;
+            let encoded = '';
+            while (value >= 0x20) {
+                encoded += String.fromCharCode((0x20 | (value & 0x1F)) + 63);
+                value >>= 5;
+            }
+            encoded += String.fromCharCode(value + 63);
+            return encoded;
+        }
+
+        function encodePolyline(points) {
+            if (points.length === 0) return '';
+            
+            let encoded = '';
+            let prevLat = 0;
+            let prevLng = 0;
+            
+            for (let i = 0; i < points.length; i++) {
+                const lat = Math.round(points[i][0] * 1e5);
+                const lng = Math.round(points[i][1] * 1e5);
+                
+                const deltaLat = lat - prevLat;
+                const deltaLng = lng - prevLng;
+                
+                encoded += encodeValue(deltaLat);
+                encoded += encodeValue(deltaLng);
+                
+                prevLat = lat;
+                prevLng = lng;
+            }
+            
+            return encoded;
+        }
+
+        // Координаты достопримечательностей в порядке следования
+        const coordinates = [
+            [55.732557, 37.604571],  // attraction_1
+            [55.734102, 37.599051],  // attraction_2
+            [55.746119, 37.583316],  // attraction_3
+            [55.755729, 37.582960],  // attraction_4
+            [55.759238, 37.580256],  // attraction_5
+            [55.759927, 37.585432],  // attraction_6
+            [55.766862, 37.592374],  // attraction_7
+            [55.768639, 37.595068],  // attraction_8
+            [55.772545, 37.605475],  // attraction_9
+            [55.773127, 37.610253],  // attraction_10
+            [55.773295, 37.613249],  // attraction_11
+            [55.773515, 37.619266],  // attraction_12
+            [55.772581, 37.632677],  // attraction_13
+            [55.769100, 37.647387],  // attraction_14
+            [55.753951, 37.656385],  // attraction_15
+            [55.750482, 37.655740],  // attraction_16
+            [55.740974, 37.652649],  // attraction_17
+            [55.731392, 37.637234]   // attraction_18
+        ];
+
+        const polyline = encodePolyline(coordinates);
+        console.log('Polyline:', polyline);
+        document.getElementById('result').textContent = polyline;
+    </script>
+</head>
+<body>
+    <h1>Polyline Generator</h1>
+    <p>Polyline: <span id="result"></span></p>
+</body>
+</html>

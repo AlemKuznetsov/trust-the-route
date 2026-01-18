@@ -1,0 +1,153 @@
+package com.trusttheroute.app.ui.navigation
+
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import com.trusttheroute.app.ui.screens.about.AboutScreen
+import com.trusttheroute.app.ui.screens.auth.LoginScreen
+import com.trusttheroute.app.ui.screens.auth.RegisterScreen
+import com.trusttheroute.app.ui.screens.auth.ResetPasswordScreen
+import com.trusttheroute.app.ui.screens.main.MainMenuScreen
+import com.trusttheroute.app.ui.screens.map.MapScreen
+import com.trusttheroute.app.ui.screens.routes.RouteDetailsScreen
+import com.trusttheroute.app.ui.screens.routes.RoutesScreen
+import com.trusttheroute.app.ui.screens.settings.SettingsScreen
+import com.trusttheroute.app.ui.screens.settings.LanguageScreen
+import com.trusttheroute.app.ui.screens.settings.ThemeScreen
+
+sealed class Screen(val route: String) {
+    object MainMenu : Screen("main_menu")
+    object Routes : Screen("routes")
+    object RouteDetails : Screen("route_details/{routeId}") {
+        fun createRoute(routeId: String) = "route_details/$routeId"
+    }
+    object Map : Screen("map/{routeId}") {
+        fun createRoute(routeId: String) = "map/$routeId"
+    }
+    object Settings : Screen("settings")
+    object Language : Screen("language")
+    object Theme : Screen("theme")
+    object About : Screen("about")
+    object Login : Screen("login")
+    object Register : Screen("register")
+    object ResetPassword : Screen("reset_password")
+}
+
+@Composable
+fun AppNavHost(
+    navController: NavHostController,
+    startDestination: String = Screen.MainMenu.route
+) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination
+    ) {
+        composable(Screen.MainMenu.route) {
+            MainMenuScreen(
+                onRoutesClick = { navController.navigate(Screen.Routes.route) },
+                onSettingsClick = { navController.navigate(Screen.Settings.route) },
+                onAboutClick = { navController.navigate(Screen.About.route) }
+            )
+        }
+
+        composable(Screen.Routes.route) {
+            RoutesScreen(
+                onBackClick = { navController.popBackStack() },
+                onRouteSelected = { routeId ->
+                    navController.navigate(Screen.RouteDetails.createRoute(routeId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.RouteDetails.route,
+            arguments = listOf(
+                navArgument("routeId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val routeId = backStackEntry.arguments?.getString("routeId") ?: ""
+            RouteDetailsScreen(
+                routeId = routeId,
+                onBackClick = { navController.popBackStack() },
+                onContinueClick = {
+                    navController.navigate(Screen.Map.createRoute(routeId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.Map.route,
+            arguments = listOf(
+                navArgument("routeId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val routeId = backStackEntry.arguments?.getString("routeId") ?: ""
+            MapScreen(
+                routeId = routeId,
+                onBackClick = { navController.popBackStack() },
+                onNavigateToRoutes = { navController.navigate(Screen.Routes.route) },
+                onNavigateToMainMenu = { navController.navigate(Screen.MainMenu.route) },
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
+            )
+        }
+
+        composable(Screen.Settings.route) {
+            SettingsScreen(
+                onBackClick = { navController.popBackStack() },
+                onLanguageClick = { navController.navigate(Screen.Language.route) },
+                onThemeClick = { navController.navigate(Screen.Theme.route) },
+                onNotificationsClick = { /* TODO: Navigate to notifications settings */ },
+                onFontSizeClick = { /* TODO: Navigate to font size settings */ },
+                onPrivacyClick = { /* TODO: Navigate to privacy settings */ },
+                onAccountClick = { /* TODO: Navigate to account settings */ },
+                onAboutClick = { navController.navigate(Screen.About.route) }
+            )
+        }
+
+        composable(Screen.Language.route) {
+            LanguageScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Theme.route) {
+            ThemeScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.About.route) {
+            AboutScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Login.route) {
+            LoginScreen(
+                onLoginSuccess = { navController.navigate(Screen.MainMenu.route) },
+                onRegisterClick = { navController.navigate(Screen.Register.route) },
+                onResetPasswordClick = { navController.navigate(Screen.ResetPassword.route) }
+            )
+        }
+
+        composable(Screen.Register.route) {
+            RegisterScreen(
+                onRegisterSuccess = { navController.navigate(Screen.MainMenu.route) },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.ResetPassword.route) {
+            ResetPasswordScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+    }
+}

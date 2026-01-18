@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Trust The Route</string>
+    
+    <!-- Authentication -->
+    <string name="register">Зарегистрироваться</string>
+    <string name="login">Войти</string>
+    <string name="email">E-mail</string>
+    <string name="password">Пароль</string>
+    <string name="name">Имя</string>
+    <string name="forgot_password">Забыли пароль?</string>
+    <string name="reset_password">Восстановить пароль</string>
+    
+    <!-- Main Menu -->
+    <string name="routes">Маршруты</string>
+    <string name="settings">Настройки</string>
+    <string name="about">О нас</string>
+    
+    <!-- Routes -->
+    <string name="select_route">Выберите маршрут</string>
+    <string name="search_route">Поиск маршрута</string>
+    <string name="route_number">Маршрут №%1$s</string>
+    <string name="route_description">Описание маршрута</string>
+    
+    <!-- Map -->
+    <string name="map">Карта</string>
+    <string name="my_location">Мое местоположение</string>
+    <string name="attraction">Достопримечательность</string>
+    <string name="audio_guide">Аудиогид</string>
+    
+    <!-- Settings -->
+    <string name="account_settings">Настройка учетной записи</string>
+    <string name="language">Язык</string>
+    <string name="theme">Тема приложения</string>
+    <string name="notifications">Уведомления</string>
+    <string name="font_size">Размер шрифта</string>
+    <string name="privacy_security">Конфиденциальность и безопасность</string>
+    <string name="app_info">Информация о приложении</string>
+    
+    <string name="light_theme">Светлая</string>
+    <string name="dark_theme">Темная</string>
+    <string name="system_theme">Системная</string>
+    
+    <string name="small_font">Маленький</string>
+    <string name="medium_font">Средний</string>
+    <string name="large_font">Большой</string>
+    
+    <!-- About -->
+    <string name="our_mission">Наша миссия</string>
+    <string name="our_values">Наши ценности</string>
+    <string name="team">Команда</string>
+    <string name="version">Версия %1$s</string>
+    
+    <!-- Common -->
+    <string name="back">Назад</string>
+    <string name="close">Закрыть</string>
+    <string name="save">Сохранить</string>
+    <string name="cancel">Отмена</string>
+    <string name="ok">ОК</string>
+    <string name="error">Ошибка</string>
+    <string name="loading">Загрузка...</string>
+    
+    <!-- Errors -->
+    <string name="error_network">Ошибка сети</string>
+    <string name="error_location">Не удалось определить местоположение</string>
+    <string name="error_audio">Ошибка воспроизведения аудио</string>
+</resources>
