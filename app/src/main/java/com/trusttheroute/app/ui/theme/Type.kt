@@ -6,7 +6,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-val Typography = Typography(
+/**
+ * Базовые размеры шрифтов (средний размер)
+ */
+private val baseTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
@@ -113,3 +116,83 @@ val Typography = Typography(
         letterSpacing = 0.5.sp
     )
 )
+
+/**
+ * Создает Typography с учетом выбранного размера шрифта
+ * @param fontSize "small", "medium", или "large"
+ */
+fun getTypography(fontSize: String): Typography {
+    val multiplier = when (fontSize) {
+        "small" -> 0.85f
+        "large" -> 1.2f
+        else -> 1.0f // medium
+    }
+    
+    return Typography(
+        displayLarge = baseTypography.displayLarge.copy(
+            fontSize = baseTypography.displayLarge.fontSize * multiplier,
+            lineHeight = baseTypography.displayLarge.lineHeight * multiplier
+        ),
+        displayMedium = baseTypography.displayMedium.copy(
+            fontSize = baseTypography.displayMedium.fontSize * multiplier,
+            lineHeight = baseTypography.displayMedium.lineHeight * multiplier
+        ),
+        displaySmall = baseTypography.displaySmall.copy(
+            fontSize = baseTypography.displaySmall.fontSize * multiplier,
+            lineHeight = baseTypography.displaySmall.lineHeight * multiplier
+        ),
+        headlineLarge = baseTypography.headlineLarge.copy(
+            fontSize = baseTypography.headlineLarge.fontSize * multiplier,
+            lineHeight = baseTypography.headlineLarge.lineHeight * multiplier
+        ),
+        headlineMedium = baseTypography.headlineMedium.copy(
+            fontSize = baseTypography.headlineMedium.fontSize * multiplier,
+            lineHeight = baseTypography.headlineMedium.lineHeight * multiplier
+        ),
+        headlineSmall = baseTypography.headlineSmall.copy(
+            fontSize = baseTypography.headlineSmall.fontSize * multiplier,
+            lineHeight = baseTypography.headlineSmall.lineHeight * multiplier
+        ),
+        titleLarge = baseTypography.titleLarge.copy(
+            fontSize = baseTypography.titleLarge.fontSize * multiplier,
+            lineHeight = baseTypography.titleLarge.lineHeight * multiplier
+        ),
+        titleMedium = baseTypography.titleMedium.copy(
+            fontSize = baseTypography.titleMedium.fontSize * multiplier,
+            lineHeight = baseTypography.titleMedium.lineHeight * multiplier
+        ),
+        titleSmall = baseTypography.titleSmall.copy(
+            fontSize = baseTypography.titleSmall.fontSize * multiplier,
+            lineHeight = baseTypography.titleSmall.lineHeight * multiplier
+        ),
+        bodyLarge = baseTypography.bodyLarge.copy(
+            fontSize = baseTypography.bodyLarge.fontSize * multiplier,
+            lineHeight = baseTypography.bodyLarge.lineHeight * multiplier
+        ),
+        bodyMedium = baseTypography.bodyMedium.copy(
+            fontSize = baseTypography.bodyMedium.fontSize * multiplier,
+            lineHeight = baseTypography.bodyMedium.lineHeight * multiplier
+        ),
+        bodySmall = baseTypography.bodySmall.copy(
+            fontSize = baseTypography.bodySmall.fontSize * multiplier,
+            lineHeight = baseTypography.bodySmall.lineHeight * multiplier
+        ),
+        labelLarge = baseTypography.labelLarge.copy(
+            fontSize = baseTypography.labelLarge.fontSize * multiplier,
+            lineHeight = baseTypography.labelLarge.lineHeight * multiplier
+        ),
+        labelMedium = baseTypography.labelMedium.copy(
+            fontSize = baseTypography.labelMedium.fontSize * multiplier,
+            lineHeight = baseTypography.labelMedium.lineHeight * multiplier
+        ),
+        labelSmall = baseTypography.labelSmall.copy(
+            fontSize = baseTypography.labelSmall.fontSize * multiplier,
+            lineHeight = baseTypography.labelSmall.lineHeight * multiplier
+        )
+    )
+}
+
+/**
+ * Дефолтная Typography для обратной совместимости
+ */
+val Typography = baseTypography

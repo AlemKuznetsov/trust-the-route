@@ -46,6 +46,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun TrustTheRouteTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    fontSize: String = "medium", // Размер шрифта: "small", "medium", "large"
     dynamicColor: Boolean = false, // Отключаем dynamicColor, чтобы использовать наши кастомные цвета
     content: @Composable () -> Unit
 ) {
@@ -69,7 +70,7 @@ fun TrustTheRouteTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = getTypography(fontSize),
         content = content
     )
 }

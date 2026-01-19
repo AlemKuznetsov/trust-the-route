@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import com.trusttheroute.app.ui.navigation.AppNavHost
 import com.trusttheroute.app.ui.navigation.Screen
 import com.trusttheroute.app.ui.theme.TrustTheRouteTheme
+import com.trusttheroute.app.ui.viewmodel.FontSizeViewModel
 import com.trusttheroute.app.ui.viewmodel.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -30,11 +31,16 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainContent(
-    themeViewModel: ThemeViewModel = hiltViewModel()
+    themeViewModel: ThemeViewModel = hiltViewModel(),
+    fontSizeViewModel: FontSizeViewModel = hiltViewModel()
 ) {
     val isDarkThemeEnabled by themeViewModel.isDarkThemeEnabled.collectAsState()
+    val fontSize by fontSizeViewModel.currentFontSize.collectAsState()
     
-    TrustTheRouteTheme(darkTheme = isDarkThemeEnabled) {
+    TrustTheRouteTheme(
+        darkTheme = isDarkThemeEnabled,
+        fontSize = fontSize
+    ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
