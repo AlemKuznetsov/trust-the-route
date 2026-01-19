@@ -30,8 +30,8 @@ class PreferencesManager @Inject constructor(
         private val DARK_THEME_ENABLED_KEY = booleanPreferencesKey("dark_theme_enabled")
         private val LANGUAGE_KEY = stringPreferencesKey("language")
         private val FONT_SIZE_KEY = stringPreferencesKey("font_size")
-        private val NOTIFICATIONS_ENABLED_KEY = stringPreferencesKey("notifications_enabled")
-        private val AUDIO_GUIDE_ENABLED_KEY = stringPreferencesKey("audio_guide_enabled")
+        private val NOTIFICATIONS_ENABLED_KEY = booleanPreferencesKey("notifications_enabled")
+        private val AUDIO_GUIDE_ENABLED_KEY = booleanPreferencesKey("audio_guide_enabled")
     }
 
     suspend fun saveToken(token: String) {
@@ -103,21 +103,21 @@ class PreferencesManager @Inject constructor(
 
     suspend fun setNotificationsEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
-            preferences[NOTIFICATIONS_ENABLED_KEY] = enabled.toString()
+            preferences[NOTIFICATIONS_ENABLED_KEY] = enabled
         }
     }
 
     val notificationsEnabled: Flow<Boolean> = context.dataStore.data.map {
-        it[NOTIFICATIONS_ENABLED_KEY]?.toBoolean() ?: true
+        it[NOTIFICATIONS_ENABLED_KEY] ?: true
     }
 
     suspend fun setAudioGuideEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
-            preferences[AUDIO_GUIDE_ENABLED_KEY] = enabled.toString()
+            preferences[AUDIO_GUIDE_ENABLED_KEY] = enabled
         }
     }
 
     val audioGuideEnabled: Flow<Boolean> = context.dataStore.data.map {
-        it[AUDIO_GUIDE_ENABLED_KEY]?.toBoolean() ?: true
+        it[AUDIO_GUIDE_ENABLED_KEY] ?: true
     }
 }

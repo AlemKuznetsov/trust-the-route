@@ -4,14 +4,12 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -20,19 +18,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trusttheroute.app.ui.theme.*
-import com.trusttheroute.app.ui.viewmodel.LanguageViewModel
+import com.trusttheroute.app.ui.viewmodel.NotificationsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LanguageScreen(
+fun NotificationsScreen(
     onBackClick: () -> Unit,
-    viewModel: LanguageViewModel = hiltViewModel()
+    viewModel: NotificationsViewModel = hiltViewModel()
 ) {
-    val currentLanguageCode by viewModel.currentLanguage.collectAsState()
+    val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
     val isDarkTheme = isDarkTheme()
     
     // Градиентный фон
@@ -69,7 +66,7 @@ fun LanguageScreen(
             TopAppBar(
                 title = { 
                     Text(
-                        "Язык",
+                        "Уведомления",
                         style = MaterialTheme.typography.headlineSmall,
                         color = if (isDarkTheme) Blue400 else BluePrimary
                     ) 
@@ -108,110 +105,46 @@ fun LanguageScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp, vertical = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    LanguageOption(
-                        language = "Русский",
-                        code = "ru",
-                        isSelected = currentLanguageCode == "ru",
-                        onClick = { viewModel.setLanguage("ru") }
-                    )
+                    // Описание
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isDarkTheme) DarkSurface else White
+                        ),
+                        elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(1.dp, DarkBorder) else null
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Push-уведомления",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = if (isDarkTheme) Blue400 else BluePrimary
+                            )
+                            Text(
+                                text = "Получайте уведомления о новых маршрутах и обновлениях приложения",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (isDarkTheme) DarkOnSurfaceSecondary else LightOnSurfaceVariant
+                            )
+                        }
+                    }
                     
-                    LanguageOption(
-                        language = "English",
-                        code = "en",
-                        isSelected = currentLanguageCode == "en",
-                        onClick = { viewModel.setLanguage("en") }
-                    )
-                    
-                    LanguageOption(
-                        language = "Deutsch",
-                        code = "de",
-                        isSelected = currentLanguageCode == "de",
-                        onClick = { viewModel.setLanguage("de") }
+                    // Переключатель уведомлений
+                    ThemeOptionCard(
+                        title = "Включить уведомления",
+                        isEnabled = notificationsEnabled,
+                        onToggle = { 
+                            viewModel.setNotificationsEnabled(!notificationsEnabled)
+                        }
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun LanguageOption(
-    language: String,
-    code: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val isDarkTheme = isDarkTheme()
-    val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected) {
-            if (isDarkTheme) Blue900.copy(alpha = 0.4f) else Color(0xFFDBEAFE)
-        } else {
-            if (isDarkTheme) DarkSurfaceVariant else White
-        },
-        animationSpec = tween(200)
-    )
-    
-    val borderColor by animateColorAsState(
-        targetValue = if (isSelected) {
-            if (isDarkTheme) Blue400 else BluePrimary
-        } else {
-            if (isDarkTheme) DarkBorderHover else BorderLight
-        },
-        animationSpec = tween(200)
-    )
-    
-    val textColor by animateColorAsState(
-        targetValue = if (isSelected) {
-            if (isDarkTheme) DarkOnSurfaceVariant else BluePrimary
-        } else {
-            if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurface
-        },
-        animationSpec = tween(200)
-    )
-    
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(
-                width = 2.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
-        ),
-        elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = language,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                ),
-                color = textColor
-            )
-            
-            AnimatedVisibility(
-                visible = isSelected,
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    tint = if (isDarkTheme) Blue400 else BluePrimary,
-                    modifier = Modifier.size(20.dp)
-                )
             }
         }
     }

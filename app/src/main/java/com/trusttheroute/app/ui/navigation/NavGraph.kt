@@ -17,6 +17,7 @@ import com.trusttheroute.app.ui.screens.routes.RoutesScreen
 import com.trusttheroute.app.ui.screens.settings.SettingsScreen
 import com.trusttheroute.app.ui.screens.settings.LanguageScreen
 import com.trusttheroute.app.ui.screens.settings.ThemeScreen
+import com.trusttheroute.app.ui.screens.settings.NotificationsScreen
 
 sealed class Screen(val route: String) {
     object MainMenu : Screen("main_menu")
@@ -30,6 +31,7 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
     object Language : Screen("language")
     object Theme : Screen("theme")
+    object Notifications : Screen("notifications")
     object About : Screen("about")
     object Login : Screen("login")
     object Register : Screen("register")
@@ -103,7 +105,7 @@ fun AppNavHost(
                 onBackClick = { navController.popBackStack() },
                 onLanguageClick = { navController.navigate(Screen.Language.route) },
                 onThemeClick = { navController.navigate(Screen.Theme.route) },
-                onNotificationsClick = { /* TODO: Navigate to notifications settings */ },
+                onNotificationsClick = { navController.navigate(Screen.Notifications.route) },
                 onFontSizeClick = { /* TODO: Navigate to font size settings */ },
                 onPrivacyClick = { /* TODO: Navigate to privacy settings */ },
                 onAccountClick = { /* TODO: Navigate to account settings */ },
@@ -119,6 +121,12 @@ fun AppNavHost(
 
         composable(Screen.Theme.route) {
             ThemeScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Notifications.route) {
+            NotificationsScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }
