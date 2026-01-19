@@ -1,10 +1,12 @@
 package com.trusttheroute.app.ui.screens.map
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -12,6 +14,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.debugInspectorInfo
 import androidx.compose.ui.text.font.FontWeight
@@ -62,42 +66,101 @@ fun MapScreen(
         }
     }
 
+    val isDarkTheme = isDarkTheme()
+    val overlayColor = if (isDarkTheme) DarkOverlayStrong else androidx.compose.ui.graphics.Color.Transparent
+    
     Box(modifier = Modifier.fillMaxSize()) {
         ModalNavigationDrawer(
             drawerState = drawerState,
             gesturesEnabled = false, // Отключаем свайп, чтобы карту можно было перемещать
-            scrimColor = androidx.compose.ui.graphics.Color.Transparent, // Отключаем стандартный scrim
+            scrimColor = overlayColor, // Затемнение для темной темы
             drawerContent = {
             ModalDrawerSheet(
-                modifier = Modifier.width(280.dp)
+                modifier = Modifier
+                    .width(288.dp)
+                    .then(
+                        if (isDarkTheme) {
+                            Modifier.border(
+                                width = 1.dp,
+                                color = DarkBorder,
+                                shape = RoundedCornerShape(0.dp)
+                            )
+                        } else {
+                            Modifier
+                        }
+                    ),
+                drawerContainerColor = if (isDarkTheme) DarkSurface else MaterialTheme.colorScheme.surface,
+                drawerContentColor = if (isDarkTheme) DarkOnSurfaceVariant else MaterialTheme.colorScheme.onSurface
             ) {
-                DrawerHeader()
+                DrawerHeader(isDarkTheme)
                 NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.DirectionsBus, contentDescription = null) },
-                    label = { Text("Маршруты") },
+                    icon = { 
+                        Icon(
+                            Icons.Default.DirectionsBus, 
+                            contentDescription = null,
+                            tint = if (isDarkTheme) DarkOnSurfaceSecondary else Color.Unspecified
+                        ) 
+                    },
+                    label = { 
+                        Text(
+                            "Маршруты",
+                            color = if (isDarkTheme) DarkOnSurfaceSecondary else Color.Unspecified
+                        ) 
+                    },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
                         onNavigateToRoutes()
-                    }
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(
+                        selectedContainerColor = if (isDarkTheme) DarkSurfaceVariant else Color.Unspecified
+                    )
                 )
                 NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                    label = { Text("Главное меню") },
+                    icon = { 
+                        Icon(
+                            Icons.Default.Home, 
+                            contentDescription = null,
+                            tint = if (isDarkTheme) DarkOnSurfaceSecondary else Color.Unspecified
+                        ) 
+                    },
+                    label = { 
+                        Text(
+                            "Главное меню",
+                            color = if (isDarkTheme) DarkOnSurfaceSecondary else Color.Unspecified
+                        ) 
+                    },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
                         onNavigateToMainMenu()
-                    }
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(
+                        selectedContainerColor = if (isDarkTheme) DarkSurfaceVariant else Color.Unspecified
+                    )
                 )
                 NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                    label = { Text("Настройки") },
+                    icon = { 
+                        Icon(
+                            Icons.Default.Settings, 
+                            contentDescription = null,
+                            tint = if (isDarkTheme) DarkOnSurfaceSecondary else Color.Unspecified
+                        ) 
+                    },
+                    label = { 
+                        Text(
+                            "Настройки",
+                            color = if (isDarkTheme) DarkOnSurfaceSecondary else Color.Unspecified
+                        ) 
+                    },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
                         onNavigateToSettings()
-                    }
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(
+                        selectedContainerColor = if (isDarkTheme) DarkSurfaceVariant else Color.Unspecified
+                    )
                 )
             }
         }
@@ -113,6 +176,7 @@ fun MapScreen(
                 title = {
                     Text(
                         text = uiState.route?.let { "Маршрут №${it.number}" } ?: "Карта маршрута",
+                        color = if (isDarkTheme) Blue400 else White,
                         modifier = Modifier
                             .then(
                                 if (isDrawerOpen) {
@@ -131,17 +195,47 @@ fun MapScreen(
                             } else {
                                 scope.launch { drawerState.open() }
                             }
+                        },
+                        modifier = if (isDarkTheme) {
+                            Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .then(
+                                    Modifier.clickable {
+                                        if (isDrawerOpen) {
+                                            scope.launch { drawerState.close() }
+                                        } else {
+                                            scope.launch { drawerState.open() }
+                                        }
+                                    }
+                                )
+                        } else {
+                            Modifier
                         }
                     ) {
-                        Icon(Icons.Default.Menu, "Меню", tint = White)
+                        Icon(
+                            Icons.Default.Menu, 
+                            "Меню", 
+                            tint = if (isDarkTheme) Blue400 else White
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BluePrimary,
-                    titleContentColor = White,
-                    navigationIconContentColor = White
+                    containerColor = if (isDarkTheme) DarkSurface else BluePrimary,
+                    titleContentColor = if (isDarkTheme) Blue400 else White,
+                    navigationIconContentColor = if (isDarkTheme) Blue400 else White
                 ),
                 modifier = Modifier
+                    .then(
+                        if (isDarkTheme) {
+                            Modifier.border(
+                                width = 1.dp,
+                                color = DarkBorder,
+                                shape = RoundedCornerShape(0.dp)
+                            )
+                        } else {
+                            Modifier
+                        }
+                    )
                     .then(
                         if (isDrawerOpen) {
                             Modifier.clickable { scope.launch { drawerState.close() } }
@@ -244,12 +338,12 @@ fun MapScreen(
 }
 
 @Composable
-fun DrawerHeader() {
+fun DrawerHeader(isDarkTheme: Boolean = false) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(160.dp)
-            .background(BluePrimary),
+            .background(if (isDarkTheme) DarkSurface else BluePrimary),
         contentAlignment = androidx.compose.ui.Alignment.Center
     ) {
         Column(
@@ -259,14 +353,14 @@ fun DrawerHeader() {
             Text(
                 text = "Trust The Route",
                 style = MaterialTheme.typography.headlineMedium,
-                color = White,
+                color = if (isDarkTheme) Blue400 else White,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Навигация",
                 style = MaterialTheme.typography.bodyMedium,
-                color = White.copy(alpha = 0.8f)
+                color = if (isDarkTheme) DarkOnSurfacePlaceholder else White.copy(alpha = 0.8f)
             )
         }
     }

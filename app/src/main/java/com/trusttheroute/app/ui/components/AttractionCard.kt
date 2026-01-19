@@ -4,6 +4,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -20,6 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,6 +43,10 @@ fun AttractionCard(
     onRestartAudio: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDarkTheme = isDarkTheme()
+    val cardColor = if (isDarkTheme) DarkSurface else White
+    val borderColor = if (isDarkTheme) DarkBorder else Color.Transparent
+    
     AnimatedVisibility(
         visible = isVisible,
         enter = expandVertically(),
@@ -47,12 +56,25 @@ fun AttractionCard(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
+                .padding(16.dp)
+                .then(
+                    if (isDarkTheme) {
+                        Modifier
+                            .border(
+                                width = 1.dp,
+                                color = borderColor,
+                                shape = RoundedCornerShape(24.dp)
+                            )
+                            .shadow(16.dp, RoundedCornerShape(24.dp))
+                    } else {
+                        Modifier
+                    }
+                ),
+            shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
-                containerColor = White
+                containerColor = cardColor
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 8.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Box(
                 modifier = Modifier.fillMaxWidth()
@@ -65,7 +87,7 @@ fun AttractionCard(
                         text = attraction.name,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = LightOnSurface,
+                        color = if (isDarkTheme) Blue400 else LightOnSurface,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 16.dp, top = 16.dp, end = 56.dp, bottom = 16.dp)
@@ -100,7 +122,7 @@ fun AttractionCard(
                                         .fillMaxWidth()
                                         .height(200.dp)
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(LightSurfaceVariant)
+                                        .background(if (isDarkTheme) DarkSurfaceVariant else LightSurfaceVariant)
                                 ) {
                                     AsyncImage(
                                         model = imageUrls[0],
@@ -122,7 +144,7 @@ fun AttractionCard(
                                                 .width(280.dp)
                                                 .height(200.dp)
                                                 .clip(RoundedCornerShape(12.dp))
-                                                .background(LightSurfaceVariant)
+                                                .background(if (isDarkTheme) DarkSurfaceVariant else LightSurfaceVariant)
                                         ) {
                                             AsyncImage(
                                                 model = imageUrl,
@@ -141,7 +163,7 @@ fun AttractionCard(
                         Text(
                             text = attraction.description,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = LightOnSurfaceVariant,
+                            color = if (isDarkTheme) DarkOnSurfaceSecondary else LightOnSurfaceVariant,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -149,59 +171,150 @@ fun AttractionCard(
                     // Зафиксированный аудиоплеер внизу
                     if (attraction.audioUrl.isNotEmpty() || attraction.localAudioPath != null) {
                         Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = White,
-                            shadowElevation = 4.dp
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .then(
+                                    if (isDarkTheme) {
+                                        Modifier
+                                            .border(
+                                                width = 1.dp,
+                                                color = DarkBorderHover,
+                                                shape = RoundedCornerShape(16.dp)
+                                            )
+                                    } else {
+                                        Modifier
+                                    }
+                                ),
+                            color = if (isDarkTheme) {
+                                // Градиент для темной темы
+                                Color.Transparent
+                            } else {
+                                White
+                            },
+                            shadowElevation = if (!isDarkTheme) 4.dp else 0.dp
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                // Кнопка Play/Pause
-                                Button(
-                                    onClick = {
-                                        if (isAudioPlaying) {
-                                            onPauseAudio()
-                                        } else {
-                                            onPlayAudio()
-                                        }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = BluePrimary
-                                    ),
-                                    shape = RoundedCornerShape(8.dp),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Icon(
-                                        imageVector = if (isAudioPlaying) {
-                                            Icons.Default.Pause
-                                        } else {
-                                            Icons.Default.PlayArrow
-                                        },
-                                        contentDescription = if (isAudioPlaying) "Пауза" else "Воспроизвести",
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = if (isAudioPlaying) "Пауза" else "Воспроизвести",
-                                        style = MaterialTheme.typography.labelLarge
-                                    )
+                            Box(
+                                modifier = if (isDarkTheme) {
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .background(
+                                            Brush.horizontalGradient(
+                                                colors = listOf(DarkSurfaceVariant, DarkSurfaceHover)
+                                            )
+                                        )
+                                } else {
+                                    Modifier.fillMaxWidth()
                                 }
-                                
-                                // Кнопка перезапуска
-                                OutlinedButton(
-                                    onClick = onRestartAudio,
-                                    shape = RoundedCornerShape(8.dp),
-                                    modifier = Modifier.width(56.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Replay,
-                                        contentDescription = "С начала",
-                                        modifier = Modifier.size(20.dp),
-                                        tint = BluePrimary
+                                    // Метка "Аудиогид"
+                                    Text(
+                                        text = "Аудиогид",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = if (isDarkTheme) DarkOnSurfacePlaceholder else Color.Unspecified,
+                                        modifier = Modifier.align(Alignment.CenterVertically)
                                     )
+                                    
+                                    // Кнопка Play/Pause
+                                    if (isDarkTheme) {
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(
+                                                    Brush.horizontalGradient(
+                                                        colors = listOf(Blue600, Blue700)
+                                                    )
+                                                )
+                                                .clickable {
+                                                    if (isAudioPlaying) {
+                                                        onPauseAudio()
+                                                    } else {
+                                                        onPlayAudio()
+                                                    }
+                                                }
+                                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.Center,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (isAudioPlaying) {
+                                                        Icons.Default.Pause
+                                                    } else {
+                                                        Icons.Default.PlayArrow
+                                                    },
+                                                    contentDescription = if (isAudioPlaying) "Пауза" else "Воспроизвести",
+                                                    modifier = Modifier.size(20.dp),
+                                                    tint = White
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = if (isAudioPlaying) "Пауза" else "Воспроизвести",
+                                                    style = MaterialTheme.typography.labelLarge,
+                                                    color = White
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        Button(
+                                            onClick = {
+                                                if (isAudioPlaying) {
+                                                    onPauseAudio()
+                                                } else {
+                                                    onPlayAudio()
+                                                }
+                                            },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = BluePrimary
+                                            ),
+                                            shape = RoundedCornerShape(8.dp),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isAudioPlaying) {
+                                                    Icons.Default.Pause
+                                                } else {
+                                                    Icons.Default.PlayArrow
+                                                },
+                                                contentDescription = if (isAudioPlaying) "Пауза" else "Воспроизвести",
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = if (isAudioPlaying) "Пауза" else "Воспроизвести",
+                                                style = MaterialTheme.typography.labelLarge
+                                            )
+                                        }
+                                    }
+                                    
+                                    // Кнопка перезапуска
+                                    OutlinedButton(
+                                        onClick = onRestartAudio,
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.width(56.dp),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            contentColor = if (isDarkTheme) Blue400 else BluePrimary
+                                        ),
+                                        border = androidx.compose.foundation.BorderStroke(
+                                            1.dp,
+                                            if (isDarkTheme) DarkBorderHover else BluePrimary
+                                        )
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Replay,
+                                            contentDescription = "С начала",
+                                            modifier = Modifier.size(20.dp),
+                                            tint = if (isDarkTheme) Blue400 else BluePrimary
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -215,11 +328,20 @@ fun AttractionCard(
                         .align(Alignment.TopEnd)
                         .padding(top = 8.dp, end = 8.dp)
                         .size(40.dp)
+                        .then(
+                            if (isDarkTheme) {
+                                Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(DarkSurface.copy(alpha = 0.9f))
+                            } else {
+                                Modifier
+                            }
+                        )
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Закрыть",
-                        tint = LightOnSurfaceVariant
+                        tint = if (isDarkTheme) DarkOnSurfaceSecondary else LightOnSurfaceVariant
                     )
                 }
             }

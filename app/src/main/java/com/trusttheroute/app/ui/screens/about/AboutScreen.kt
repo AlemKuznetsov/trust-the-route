@@ -1,6 +1,7 @@
 package com.trusttheroute.app.ui.screens.about
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,6 +27,11 @@ import com.trusttheroute.app.ui.theme.*
 fun AboutScreen(
     onBackClick: () -> Unit
 ) {
+    val isDarkTheme = isDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val headerColor = if (isDarkTheme) DarkSurface else CyanAccent
+    val headerTextColor = if (isDarkTheme) Blue400 else White
+    
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -32,7 +39,7 @@ fun AboutScreen(
             title = { 
                 Text(
                     "О нас",
-                    color = White
+                    color = headerTextColor
                 ) 
             },
             navigationIcon = {
@@ -40,20 +47,25 @@ fun AboutScreen(
                     Icon(
                         Icons.Default.ArrowBack, 
                         "Назад",
-                        tint = White
+                        tint = headerTextColor
                     )
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = CyanAccent
-            )
+                containerColor = headerColor
+            ),
+            modifier = if (isDarkTheme) Modifier.border(
+                width = 1.dp,
+                color = DarkBorder,
+                shape = RoundedCornerShape(0.dp)
+            ) else Modifier
         )
         
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .background(LightBackground)
+                .background(backgroundColor)
                 .padding(horizontal = 16.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -62,9 +74,10 @@ fun AboutScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = White
+                    containerColor = if (isDarkTheme) DarkSurface else White
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 4.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(1.dp, DarkBorder) else null
             ) {
                 Column(
                     modifier = Modifier
@@ -76,20 +89,20 @@ fun AboutScreen(
                         text = "Trust The Route",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = BluePrimary
+                        color = if (isDarkTheme) Blue400 else BluePrimary
                     )
                     
                     Text(
                         text = "Trust The Route — это инновационное приложение для изучения городских маршрутов и знакомства с достопримечательностями во время поездок на общественном транспорте.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = LightOnSurface,
+                        color = if (isDarkTheme) DarkOnSurfaceSecondary else LightOnSurface,
                         lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
                     )
                     
                     Text(
                         text = "Мы создаем уникальный опыт городских путешествий, превращая обычные поездки в увлекательные экскурсии с аудиогидами и интерактивными картами.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = LightOnSurface,
+                        color = if (isDarkTheme) DarkOnSurfaceSecondary else LightOnSurface,
                         lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
                     )
                 }
@@ -136,12 +149,12 @@ fun AboutScreen(
                 Text(
                     text = "© 2026 Trust The Route",
                     style = MaterialTheme.typography.bodySmall,
-                    color = LightOnSurfaceVariant
+                    color = if (isDarkTheme) DarkOnSurfacePlaceholder else LightOnSurfaceVariant
                 )
                 Text(
                     text = "Версия 1.0.1",
                     style = MaterialTheme.typography.bodySmall,
-                    color = LightOnSurfaceVariant
+                    color = if (isDarkTheme) DarkOnSurfacePlaceholder else LightOnSurfaceVariant
                 )
             }
         }
@@ -155,13 +168,16 @@ fun InfoCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     gradient: Brush
 ) {
+    val isDarkTheme = isDarkTheme()
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = White
+            containerColor = if (isDarkTheme) DarkSurface else White
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 4.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(1.dp, DarkBorder) else null
     ) {
         Box(
             modifier = Modifier
@@ -194,7 +210,7 @@ fun InfoCard(
                     Text(
                         text = description,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = White
+                        color = Color(0xFFEFF6FF) // blue-50 для описаний
                     )
                 }
             }

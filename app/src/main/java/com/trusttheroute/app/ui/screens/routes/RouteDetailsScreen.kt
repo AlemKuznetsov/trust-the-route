@@ -1,6 +1,7 @@
 package com.trusttheroute.app.ui.screens.routes
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,24 +57,43 @@ fun RouteDetailsScreen(
     }
 
     val currentRoute = route!!
+    val isDarkTheme = isDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val headerColor = if (isDarkTheme) DarkSurface else BluePrimary
+    val headerTextColor = if (isDarkTheme) Blue400 else White
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightBackground)
+            .background(backgroundColor)
     ) {
         // Верхняя панель
         TopAppBar(
-            title = { Text("Маршрут ${currentRoute.number}") },
+            title = { 
+                Text(
+                    "Маршрут ${currentRoute.number}",
+                    color = headerTextColor
+                ) 
+            },
             navigationIcon = {
                 IconButton(onClick = onBackClick) {
-                    Icon(Icons.Default.ArrowBack, "Назад")
+                    Icon(
+                        Icons.Default.ArrowBack, 
+                        "Назад",
+                        tint = headerTextColor
+                    )
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = BluePrimary,
-                titleContentColor = White,
-                navigationIconContentColor = White
-            )
+                containerColor = headerColor,
+                titleContentColor = headerTextColor,
+                navigationIconContentColor = headerTextColor
+            ),
+            modifier = if (isDarkTheme) Modifier.border(
+                width = 1.dp,
+                color = DarkBorder,
+                shape = RoundedCornerShape(0.dp)
+            ) else Modifier
         )
 
         // Контент с прокруткой
@@ -89,7 +109,7 @@ fun RouteDetailsScreen(
                 text = currentRoute.name,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = LightOnSurface,
+                color = if (isDarkTheme) Blue400 else LightOnSurface,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -99,8 +119,10 @@ fun RouteDetailsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = White
-                    )
+                        containerColor = if (isDarkTheme) DarkSurface else White
+                    ),
+                    border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(1.dp, DarkBorder) else null,
+                    elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -110,12 +132,12 @@ fun RouteDetailsScreen(
                             text = "Описание маршрута",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = LightOnSurface
+                            color = if (isDarkTheme) Blue400 else LightOnSurface
                         )
                         Text(
                             text = currentRoute.description,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = LightOnSurfaceVariant
+                            color = if (isDarkTheme) DarkOnSurfaceSecondary else LightOnSurfaceVariant
                         )
                     }
                 }
@@ -127,8 +149,10 @@ fun RouteDetailsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = White
-                    )
+                        containerColor = if (isDarkTheme) DarkSurface else White
+                    ),
+                    border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(1.dp, DarkBorder) else null,
+                    elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -143,7 +167,7 @@ fun RouteDetailsScreen(
                         Text(
                             text = currentRoute.history,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = LightOnSurfaceVariant
+                                color = if (isDarkTheme) DarkOnSurfacePlaceholder else LightOnSurfaceVariant
                         )
                     }
                 }
@@ -155,8 +179,10 @@ fun RouteDetailsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = White
-                    )
+                        containerColor = if (isDarkTheme) DarkSurface else White
+                    ),
+                    border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(1.dp, DarkBorder) else null,
+                    elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -171,7 +197,7 @@ fun RouteDetailsScreen(
                         Text(
                             text = currentRoute.attractionsDescription,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = LightOnSurfaceVariant
+                                color = if (isDarkTheme) DarkOnSurfacePlaceholder else LightOnSurfaceVariant
                         )
                     }
                 }
@@ -182,8 +208,10 @@ fun RouteDetailsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = White
-                )
+                    containerColor = if (isDarkTheme) DarkSurface else White
+                ),
+                border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(1.dp, DarkBorder) else null,
+                elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -213,13 +241,13 @@ fun RouteDetailsScreen(
                                 Text(
                                     text = "Продолжительность поездки",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = LightOnSurfaceVariant
+                                    color = if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurfaceVariant
                                 )
                                 Text(
                                     text = currentRoute.duration,
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
-                                    color = LightOnSurface
+                                    color = if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurface
                                 )
                             }
                         }
@@ -242,13 +270,13 @@ fun RouteDetailsScreen(
                                 Text(
                                     text = "Интервал автобуса",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = LightOnSurfaceVariant
+                                    color = if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurfaceVariant
                                 )
                                 Text(
                                     text = currentRoute.interval,
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
-                                    color = LightOnSurface
+                                    color = if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurface
                                 )
                             }
                         }
@@ -271,13 +299,13 @@ fun RouteDetailsScreen(
                                 Text(
                                     text = "Начало экскурсии",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = LightOnSurfaceVariant
+                                    color = if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurfaceVariant
                                 )
                                 Text(
                                     text = currentRoute.startPoint,
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
-                                    color = LightOnSurface
+                                    color = if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurface
                                 )
                             }
                         }
@@ -291,8 +319,10 @@ fun RouteDetailsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = White
-                    )
+                        containerColor = if (isDarkTheme) DarkSurface else White
+                    ),
+                    border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(1.dp, DarkBorder) else null,
+                    elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -313,12 +343,12 @@ fun RouteDetailsScreen(
                                     text = "${index + 1}.",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = BluePrimary
+                                    color = if (isDarkTheme) Blue400 else BluePrimary
                                 )
                                 Text(
                                     text = stop,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = LightOnSurface,
+                                    color = if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurface,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -333,8 +363,9 @@ fun RouteDetailsScreen(
         // Кнопки внизу (зафиксированы)
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = LightBackground,
-            shadowElevation = 8.dp
+            color = backgroundColor,
+            shadowElevation = if (!isDarkTheme) 8.dp else 0.dp,
+            border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(1.dp, DarkBorder) else null
         ) {
             Row(
                 modifier = Modifier

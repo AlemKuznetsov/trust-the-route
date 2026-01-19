@@ -30,16 +30,26 @@ fun MainMenuScreen(
     onSettingsClick: () -> Unit,
     onAboutClick: () -> Unit
 ) {
+    val isDarkTheme = isDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val gradientColors = if (isDarkTheme) {
+        listOf(
+            DarkBackground,  // slate-900
+            DarkSurface,      // slate-800
+            DarkBackground   // slate-900
+        )
+    } else {
+        listOf(
+            CyanAccent.copy(alpha = 0.1f),
+            LightBackground
+        )
+    }
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        CyanAccent.copy(alpha = 0.1f),
-                        LightBackground
-                    )
-                )
+                brush = Brush.verticalGradient(colors = gradientColors)
             )
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -51,8 +61,16 @@ fun MainMenuScreen(
         Text(
             text = "Trust The Route",
             style = MaterialTheme.typography.displayMedium,
-            color = BluePrimary,
+            color = if (isDarkTheme) Blue400 else BluePrimary,
             fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        
+        // Подзаголовок "Выберите раздел"
+        Text(
+            text = "Выберите раздел",
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (isDarkTheme) DarkOnSurfacePlaceholder else LightOnSurfaceVariant,
             textAlign = TextAlign.Center
         )
 
@@ -63,7 +81,7 @@ fun MainMenuScreen(
             text = "Маршруты",
             icon = Icons.Default.Map,
             gradient = Brush.horizontalGradient(
-                colors = listOf(CyanAccent, BluePrimary)
+                colors = listOf(Blue500, Blue600)
             ),
             onClick = onRoutesClick
         )
@@ -73,7 +91,7 @@ fun MainMenuScreen(
             text = "Настройки",
             icon = Icons.Default.Settings,
             gradient = Brush.horizontalGradient(
-                colors = listOf(CyanAccent, IndigoAccent)
+                colors = listOf(IndigoAccent, IndigoAccent.copy(alpha = 0.9f))
             ),
             onClick = onSettingsClick
         )
@@ -83,7 +101,7 @@ fun MainMenuScreen(
             text = "О нас",
             icon = Icons.Default.Info,
             gradient = Brush.horizontalGradient(
-                colors = listOf(BluePrimary, IndigoAccent)
+                colors = listOf(CyanAccent, Blue500)
             ),
             onClick = onAboutClick
         )

@@ -32,17 +32,30 @@ fun LanguageScreen(
     onBackClick: () -> Unit
 ) {
     var selectedLanguage by remember { mutableStateOf("Русский") }
+    val isDarkTheme = isDarkTheme()
     
     // Градиентный фон
-    val gradientBrush = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFFEFF6FF), // blue-50
-            Color(0xFFFFFFFF), // white
-            Color(0xFFECFEFF)  // cyan-50
-        ),
-        start = androidx.compose.ui.geometry.Offset(0f, 0f),
-        end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
-    )
+    val gradientBrush = if (isDarkTheme) {
+        Brush.linearGradient(
+            colors = listOf(
+                DarkBackground,  // slate-900
+                DarkSurface,      // slate-800
+                DarkBackground    // slate-900
+            ),
+            start = androidx.compose.ui.geometry.Offset(0f, 0f),
+            end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
+        )
+    } else {
+        Brush.linearGradient(
+            colors = listOf(
+                Color(0xFFEFF6FF), // blue-50
+                Color(0xFFFFFFFF), // white
+                Color(0xFFECFEFF)  // cyan-50
+            ),
+            start = androidx.compose.ui.geometry.Offset(0f, 0f),
+            end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
+        )
+    }
     
     Box(
         modifier = Modifier
@@ -57,7 +70,7 @@ fun LanguageScreen(
                     Text(
                         "Язык",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = BluePrimary
+                        color = if (isDarkTheme) Blue400 else BluePrimary
                     ) 
                 },
                 navigationIcon = {
@@ -65,19 +78,19 @@ fun LanguageScreen(
                         Icon(
                             Icons.Default.ArrowBack,
                             "Назад",
-                            tint = BluePrimary,
+                            tint = if (isDarkTheme) Blue400 else BluePrimary,
                             modifier = Modifier.size(24.dp)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = White,
-                    titleContentColor = BluePrimary,
-                    navigationIconContentColor = BluePrimary
+                    containerColor = if (isDarkTheme) DarkSurface else White,
+                    titleContentColor = if (isDarkTheme) Blue400 else BluePrimary,
+                    navigationIconContentColor = if (isDarkTheme) Blue400 else BluePrimary
                 ),
                 modifier = Modifier.border(
                     width = 1.dp,
-                    color = BorderLight,
+                    color = if (isDarkTheme) DarkBorder else BorderLight,
                     shape = RoundedCornerShape(0.dp)
                 )
             )
@@ -129,18 +142,31 @@ fun LanguageOption(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val isDarkTheme = isDarkTheme()
     val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0xFFDBEAFE) else White,
+        targetValue = if (isSelected) {
+            if (isDarkTheme) Blue900.copy(alpha = 0.4f) else Color(0xFFDBEAFE)
+        } else {
+            if (isDarkTheme) DarkSurfaceVariant else White
+        },
         animationSpec = tween(200)
     )
     
     val borderColor by animateColorAsState(
-        targetValue = if (isSelected) BluePrimary else BorderLight,
+        targetValue = if (isSelected) {
+            if (isDarkTheme) Blue400 else BluePrimary
+        } else {
+            if (isDarkTheme) DarkBorderHover else BorderLight
+        },
         animationSpec = tween(200)
     )
     
     val textColor by animateColorAsState(
-        targetValue = if (isSelected) BluePrimary else LightOnSurface,
+        targetValue = if (isSelected) {
+            if (isDarkTheme) DarkOnSurfaceVariant else BluePrimary
+        } else {
+            if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurface
+        },
         animationSpec = tween(200)
     )
     
@@ -157,7 +183,7 @@ fun LanguageOption(
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -182,7 +208,7 @@ fun LanguageOption(
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = null,
-                    tint = BluePrimary,
+                    tint = if (isDarkTheme) Blue400 else BluePrimary,
                     modifier = Modifier.size(20.dp)
                 )
             }

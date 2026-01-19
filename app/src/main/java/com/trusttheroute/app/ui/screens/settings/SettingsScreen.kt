@@ -36,16 +36,30 @@ fun SettingsScreen(
     onAccountClick: () -> Unit = {},
     onAboutClick: () -> Unit = {}
 ) {
+    val isDarkTheme = isDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
     // Градиентный фон
-    val gradientBrush = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFFEFF6FF), // blue-50
-            Color(0xFFFFFFFF), // white
-            Color(0xFFECFEFF)  // cyan-50
-        ),
-        start = androidx.compose.ui.geometry.Offset(0f, 0f),
-        end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
-    )
+    val gradientBrush = if (isDarkTheme) {
+        Brush.linearGradient(
+            colors = listOf(
+                DarkBackground,  // slate-900
+                DarkSurface,      // slate-800
+                DarkBackground    // slate-900
+            ),
+            start = androidx.compose.ui.geometry.Offset(0f, 0f),
+            end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
+        )
+    } else {
+        Brush.linearGradient(
+            colors = listOf(
+                Color(0xFFEFF6FF), // blue-50
+                Color(0xFFFFFFFF), // white
+                Color(0xFFECFEFF)  // cyan-50
+            ),
+            start = androidx.compose.ui.geometry.Offset(0f, 0f),
+            end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
+        )
+    }
     
     Box(
         modifier = Modifier
@@ -61,14 +75,18 @@ fun SettingsScreen(
                     Text(
                         "Настройки",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = BluePrimary
+                        color = if (isDarkTheme) Blue400 else BluePrimary
                     ) 
                 },
                 navigationIcon = {
                     val interactionSource = remember { MutableInteractionSource() }
                     val isHovered by interactionSource.collectIsHoveredAsState()
                     val backgroundColor by animateColorAsState(
-                        targetValue = if (isHovered) Color(0xFFEFF6FF) else Color.Transparent,
+                        targetValue = if (isHovered) {
+                            if (isDarkTheme) DarkSurfaceVariant else Color(0xFFEFF6FF)
+                        } else {
+                            Color.Transparent
+                        },
                         animationSpec = tween(200)
                     )
                     
@@ -81,19 +99,19 @@ fun SettingsScreen(
                         Icon(
                             Icons.Default.ArrowBack,
                             "Назад",
-                            tint = BluePrimary,
+                            tint = if (isDarkTheme) Blue400 else BluePrimary,
                             modifier = Modifier.size(24.dp)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = White,
-                    titleContentColor = BluePrimary,
-                    navigationIconContentColor = BluePrimary
+                    containerColor = if (isDarkTheme) DarkSurface else White,
+                    titleContentColor = if (isDarkTheme) Blue400 else BluePrimary,
+                    navigationIconContentColor = if (isDarkTheme) Blue400 else BluePrimary
                 ),
                 modifier = Modifier.border(
                     width = 1.dp,
-                    color = BorderLight,
+                    color = if (isDarkTheme) DarkBorder else BorderLight,
                     shape = RoundedCornerShape(0.dp)
                 )
             )
@@ -189,16 +207,25 @@ fun SettingsCategoryCard(
     iconTint: Color,
     onClick: () -> Unit
 ) {
+    val isDarkTheme = isDarkTheme()
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
     
     val backgroundColor by animateColorAsState(
-        targetValue = if (isHovered) Color(0xFFEFF6FF) else White,
+        targetValue = if (isHovered) {
+            if (isDarkTheme) DarkSurfaceVariant else Color(0xFFEFF6FF)
+        } else {
+            if (isDarkTheme) DarkSurface else White
+        },
         animationSpec = tween(200)
     )
     
     val borderColor by animateColorAsState(
-        targetValue = if (isHovered) Color(0xFF93C5FD) else BorderLight,
+        targetValue = if (isHovered) {
+            if (isDarkTheme) Blue500 else Color(0xFF93C5FD)
+        } else {
+            if (isDarkTheme) DarkBorder else BorderLight
+        },
         animationSpec = tween(200)
     )
     
@@ -230,7 +257,7 @@ fun SettingsCategoryCard(
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = elevation)
+        elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = elevation) else CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -250,7 +277,7 @@ fun SettingsCategoryCard(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(iconBackgroundColor),
+                        .background(if (isDarkTheme) DarkSurfaceVariant else iconBackgroundColor),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -264,14 +291,14 @@ fun SettingsCategoryCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = LightOnSurface
+                    color = if (isDarkTheme) DarkOnSurfaceSecondary else LightOnSurface
                 )
             }
             
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = LightOnSurfaceVariant,
+                tint = if (isDarkTheme) DarkOnSurfaceDescription else LightOnSurfaceVariant,
                 modifier = Modifier
                     .size(20.dp)
                     .offset(x = chevronOffset)

@@ -30,17 +30,30 @@ fun ThemeScreen(
     viewModel: ThemeViewModel = hiltViewModel()
 ) {
     val isDarkThemeEnabled by viewModel.isDarkThemeEnabled.collectAsState()
+    val isDarkTheme = isDarkTheme()
     
     // Градиентный фон
-    val gradientBrush = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFFEFF6FF), // blue-50
-            Color(0xFFFFFFFF), // white
-            Color(0xFFECFEFF)  // cyan-50
-        ),
-        start = androidx.compose.ui.geometry.Offset(0f, 0f),
-        end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
-    )
+    val gradientBrush = if (isDarkTheme) {
+        Brush.linearGradient(
+            colors = listOf(
+                DarkBackground,  // slate-900
+                DarkSurface,      // slate-800
+                DarkBackground    // slate-900
+            ),
+            start = androidx.compose.ui.geometry.Offset(0f, 0f),
+            end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
+        )
+    } else {
+        Brush.linearGradient(
+            colors = listOf(
+                Color(0xFFEFF6FF), // blue-50
+                Color(0xFFFFFFFF), // white
+                Color(0xFFECFEFF)  // cyan-50
+            ),
+            start = androidx.compose.ui.geometry.Offset(0f, 0f),
+            end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
+        )
+    }
     
     Box(
         modifier = Modifier
@@ -55,7 +68,7 @@ fun ThemeScreen(
                     Text(
                         "Тема приложения",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = BluePrimary
+                        color = if (isDarkTheme) Blue400 else BluePrimary
                     ) 
                 },
                 navigationIcon = {
@@ -63,19 +76,19 @@ fun ThemeScreen(
                         Icon(
                             Icons.Default.ArrowBack,
                             "Назад",
-                            tint = BluePrimary,
+                            tint = if (isDarkTheme) Blue400 else BluePrimary,
                             modifier = Modifier.size(24.dp)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = White,
-                    titleContentColor = BluePrimary,
-                    navigationIconContentColor = BluePrimary
+                    containerColor = if (isDarkTheme) DarkSurface else White,
+                    titleContentColor = if (isDarkTheme) Blue400 else BluePrimary,
+                    navigationIconContentColor = if (isDarkTheme) Blue400 else BluePrimary
                 ),
                 modifier = Modifier.border(
                     width = 1.dp,
-                    color = BorderLight,
+                    color = if (isDarkTheme) DarkBorder else BorderLight,
                     shape = RoundedCornerShape(0.dp)
                 )
             )
@@ -113,19 +126,21 @@ fun ThemeOptionCard(
     isEnabled: Boolean,
     onToggle: () -> Unit
 ) {
+    val isDarkTheme = isDarkTheme()
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .border(
                 width = 2.dp,
-                color = BorderLight,
+                color = if (isDarkTheme) DarkBorder else BorderLight,
                 shape = RoundedCornerShape(12.dp)
             ),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = White
+            containerColor = if (isDarkTheme) DarkSurface else White
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -137,17 +152,17 @@ fun ThemeOptionCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                color = LightOnSurface
+                color = if (isDarkTheme) DarkOnSurfaceSecondary else LightOnSurface
             )
             
             Switch(
                 checked = isEnabled,
                 onCheckedChange = { onToggle() },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = BluePrimary,
-                    checkedTrackColor = BluePrimary.copy(alpha = 0.5f),
-                    uncheckedThumbColor = Color(0xFFE2E8F0),
-                    uncheckedTrackColor = Color(0xFFCBD5E1)
+                    checkedThumbColor = if (isDarkTheme) Blue400 else BluePrimary,
+                    checkedTrackColor = if (isDarkTheme) Blue900.copy(alpha = 0.4f) else BluePrimary.copy(alpha = 0.5f),
+                    uncheckedThumbColor = if (isDarkTheme) DarkOnSurfacePlaceholder else Color(0xFFE2E8F0),
+                    uncheckedTrackColor = if (isDarkTheme) DarkBorderHover else Color(0xFFCBD5E1)
                 )
             )
         }

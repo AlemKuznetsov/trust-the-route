@@ -46,7 +46,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun TrustTheRouteTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // Отключаем dynamicColor, чтобы использовать наши кастомные цвета
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -72,4 +72,12 @@ fun TrustTheRouteTheme(
         typography = Typography,
         content = content
     )
+}
+
+/**
+ * Проверяет, используется ли темная тема на основе текущей цветовой схемы MaterialTheme
+ */
+@Composable
+fun isDarkTheme(): Boolean {
+    return MaterialTheme.colorScheme.background == DarkBackground
 }
