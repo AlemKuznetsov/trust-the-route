@@ -33,6 +33,22 @@
             </intent-filter>
         </activity>
 
+        <!-- Yandex OAuth Activity для обработки redirect -->
+        <activity
+            android:name=".ui.auth.YandexOAuthActivity"
+            android:exported="true"
+            android:theme="@style/Theme.TrustTheRoute">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="trusttheroute"
+                    android:host="oauth"
+                    android:pathPrefix="/yandex" />
+            </intent-filter>
+        </activity>
+
         <!-- Yandex MapKit API Key -->
         <meta-data
             android:name="com.yandex.mapkit.api_key"

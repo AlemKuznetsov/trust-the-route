@@ -32,10 +32,24 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainContent(
     themeViewModel: ThemeViewModel = hiltViewModel(),
-    fontSizeViewModel: FontSizeViewModel = hiltViewModel()
+    fontSizeViewModel: FontSizeViewModel = hiltViewModel(),
+    authViewModel: com.trusttheroute.app.ui.viewmodel.AuthViewModel = hiltViewModel()
 ) {
     val isDarkThemeEnabled by themeViewModel.isDarkThemeEnabled.collectAsState()
     val fontSize by fontSizeViewModel.currentFontSize.collectAsState()
+    val authState by authViewModel.uiState.collectAsState()
+    val navController = rememberNavController()
+    
+    // Проверяем статус авторизации при запуске
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        authViewModel.checkAuthStatus()
+    }
+    
+    // Определяем начальный экран в зависимости от статуса авторизации
+    val startDestination = when (authState) {
+        is com.trusttheroute.app.ui.viewmodel.AuthUiState.Success -> Screen.MainMenu.route
+        else -> Screen.Login.route
+    }
     
     TrustTheRouteTheme(
         darkTheme = isDarkThemeEnabled,
@@ -45,10 +59,9 @@ fun MainContent(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            val navController = rememberNavController()
             AppNavHost(
                 navController = navController,
-                startDestination = Screen.MainMenu.route
+                startDestination = startDestination
             )
         }
     }

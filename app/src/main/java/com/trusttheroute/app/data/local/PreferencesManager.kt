@@ -32,6 +32,7 @@ class PreferencesManager @Inject constructor(
         private val FONT_SIZE_KEY = stringPreferencesKey("font_size")
         private val NOTIFICATIONS_ENABLED_KEY = booleanPreferencesKey("notifications_enabled")
         private val AUDIO_GUIDE_ENABLED_KEY = booleanPreferencesKey("audio_guide_enabled")
+        private val OAUTH_STATE_KEY = stringPreferencesKey("oauth_state")
     }
 
     suspend fun saveToken(token: String) {
@@ -119,5 +120,21 @@ class PreferencesManager @Inject constructor(
 
     val audioGuideEnabled: Flow<Boolean> = context.dataStore.data.map {
         it[AUDIO_GUIDE_ENABLED_KEY] ?: true
+    }
+
+    suspend fun saveOAuthState(state: String) {
+        context.dataStore.edit { preferences ->
+            preferences[OAUTH_STATE_KEY] = state
+        }
+    }
+
+    suspend fun getOAuthState(): String? {
+        return context.dataStore.data.map { it[OAUTH_STATE_KEY] }.first()
+    }
+
+    suspend fun clearOAuthState() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(OAUTH_STATE_KEY)
+        }
     }
 }
