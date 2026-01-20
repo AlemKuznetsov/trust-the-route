@@ -1,5 +1,9 @@
 package com.trusttheroute.app.ui.screens.map
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,9 +21,11 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.debugInspectorInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import com.trusttheroute.app.ui.components.AttractionCard
@@ -42,17 +48,63 @@ fun MapScreen(
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    var centerOnLocationTrigger by remember { mutableStateOf(0) }
     
     // Отслеживаем состояние drawer для закрытия при клике на карту
     val isDrawerOpen by remember {
         derivedStateOf { drawerState.currentValue == DrawerValue.Open }
     }
 
+    // Проверка разрешения на геолокацию
+    val hasLocationPermission = remember {
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED ||
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    // Launcher для запроса разрешения на геолокацию
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        
+        if (fineLocationGranted || coarseLocationGranted) {
+            // Разрешение получено, запускаем отслеживание местоположения
+            viewModel.startLocationTracking()
+        } else {
+            // Разрешение отклонено
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = "Для работы карты необходимо разрешение на геолокацию",
+                    duration = SnackbarDuration.Long
+                )
+            }
+        }
+    }
+
     // Загрузка маршрута при первом запуске
     LaunchedEffect(routeId) {
         if (routeId.isNotEmpty()) {
             viewModel.loadRoute(routeId)
-            viewModel.startLocationTracking()
+            
+            // Запрашиваем разрешение, если его нет
+            if (!hasLocationPermission) {
+                locationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            } else {
+                viewModel.startLocationTracking()
+            }
         }
     }
 
@@ -262,7 +314,8 @@ fun MapScreen(
                         },
                         modifier = Modifier.fillMaxSize(),
                         isDrawerOpen = isDrawerOpen,
-                        onMapClick = null // Убираем обработчик клика на карте, используем только кликабельный слой
+                        onMapClick = null, // Убираем обработчик клика на карте, используем только кликабельный слой
+                        centerOnLocationTrigger = centerOnLocationTrigger
                     )
                 } else if (uiState.isLoading) {
                     Box(
@@ -295,6 +348,26 @@ fun MapScreen(
                             .align(androidx.compose.ui.Alignment.BottomCenter)
                             .fillMaxWidth()
                     )
+                }
+
+                // Кнопка "Моё местоположение"
+                if (uiState.currentLocation != null) {
+                    FloatingActionButton(
+                        onClick = {
+                            centerOnLocationTrigger++
+                        },
+                        modifier = Modifier
+                            .align(androidx.compose.ui.Alignment.BottomEnd)
+                            .padding(16.dp),
+                        containerColor = if (isDarkTheme) DarkSurface else BluePrimary,
+                        contentColor = if (isDarkTheme) Blue400 else White
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MyLocation,
+                            contentDescription = "Моё местоположение",
+                            tint = if (isDarkTheme) Blue400 else White
+                        )
+                    }
                 }
 
                 // Snackbar для отображения ошибок

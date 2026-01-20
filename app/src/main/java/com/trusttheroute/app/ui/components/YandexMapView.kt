@@ -30,7 +30,8 @@ fun YandexMapView(
     onAttractionClick: ((Attraction) -> Unit)? = null,
     modifier: Modifier = Modifier,
     isDrawerOpen: Boolean = false,
-    onMapClick: (() -> Unit)? = null
+    onMapClick: (() -> Unit)? = null,
+    centerOnLocationTrigger: Int = 0
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -140,6 +141,18 @@ fun YandexMapView(
     LaunchedEffect(route, attractions, currentLocation) {
         updateMap(mapView, route, attractions, currentLocation)
     }
+    
+    // Центрирование карты на текущем местоположении при изменении centerOnLocationTrigger
+    LaunchedEffect(centerOnLocationTrigger, currentLocation) {
+        if (centerOnLocationTrigger > 0 && currentLocation != null) {
+            val userPoint = Point(currentLocation.latitude, currentLocation.longitude)
+            mapView.map.move(
+                CameraPosition(userPoint, 15f, 0f, 0f),
+                Animation(Animation.Type.SMOOTH, 0.5f),
+                null
+            )
+        }
+    }
 
     AndroidView(
         factory = { mapView },
@@ -245,12 +258,14 @@ private fun updateMap(
         val userPoint = Point(location.latitude, location.longitude)
         mapObjects.addPlacemark(userPoint)
         
-        // Перемещение камеры к пользователю
-        mapView.map.move(
-            CameraPosition(userPoint, 15f, 0f, 0f),
-            Animation(Animation.Type.SMOOTH, 0.5f),
-            null
-        )
+        // Перемещение камеры к пользователю только если нет маршрута (при первой загрузке)
+        if (route == null) {
+            mapView.map.move(
+                CameraPosition(userPoint, 15f, 0f, 0f),
+                Animation(Animation.Type.SMOOTH, 0.5f),
+                null
+            )
+        }
     }
 }
 

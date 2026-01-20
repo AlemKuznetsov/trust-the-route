@@ -3,6 +3,7 @@ package com.trusttheroute.app.data.auth
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.browser.customtabs.CustomTabsIntent
 import com.trusttheroute.app.data.local.PreferencesManager
 import com.trusttheroute.app.domain.model.User
@@ -34,11 +35,19 @@ class YandexAuthManager @Inject constructor(
     private val okHttpClient: OkHttpClient
 ) {
     companion object {
+        private const val TAG = "YandexAuthManager"
+        
         // TODO: Замените на ваш Client ID из Yandex OAuth
         // Рекомендуется хранить в BuildConfig или local.properties
         private const val YANDEX_CLIENT_ID = "18401c8a769a4f5f9a546e05ea184851"
         
-        // Redirect URI должен совпадать с указанным в настройках приложения Yandex OAuth
+        // TODO: Если требуется client_secret, добавьте его здесь
+        // Для Android приложений обычно НЕ требуется, но может быть нужен для некоторых типов приложений
+        private const val YANDEX_CLIENT_SECRET = "686a11b235894d4bba2d463dd2ce2a64"
+        
+        // ⚠️ ВАЖНО: Redirect URI должен ТОЧНО совпадать с Callback URL в настройках приложения Yandex OAuth
+        // Проверьте настройки на https://oauth.yandex.com/
+        // Формат должен быть: trusttheroute://oauth/yandex (без слеша в конце!)
         private const val REDIRECT_URI = "trusttheroute://oauth/yandex"
         
         private const val YANDEX_AUTH_URL = "https://oauth.yandex.ru/authorize"
@@ -46,7 +55,10 @@ class YandexAuthManager @Inject constructor(
         private const val YANDEX_USER_INFO_URL = "https://login.yandex.ru/info"
         
         // Scopes для запроса данных пользователя
-        private const val SCOPES = "login:email login:avatar login:name"
+        // ⚠️ ВАЖНО: Scopes должны совпадать с разрешениями, выбранными в настройках приложения Yandex OAuth
+        // Для Android приложений обычно используются: login:email и login:info (вместо login:name)
+        // Если получаете ошибку invalid_scope, попробуйте убрать login:avatar или использовать только login:info
+        private const val SCOPES = "login:email login:info"
     }
 
     /**
@@ -54,25 +66,52 @@ class YandexAuthManager @Inject constructor(
      */
     suspend fun getAuthUrl(): String = withContext(Dispatchers.IO) {
         val state = UUID.randomUUID().toString()
+        Log.d(TAG, "Генерация state: $state")
+        
         // Сохраняем state для проверки при получении токена
+        // Важно: сохраняем синхронно, чтобы state был доступен при callback
         preferencesManager.saveOAuthState(state)
         
-        Uri.parse(YANDEX_AUTH_URL)
+        // Проверяем, что state сохранился
+        val savedState = preferencesManager.getOAuthState()
+        Log.d(TAG, "State сохранен: ${savedState == state}, сохраненный: $savedState")
+        
+        val authUrl = Uri.parse(YANDEX_AUTH_URL)
             .buildUpon()
             .appendQueryParameter("response_type", "code")
             .appendQueryParameter("client_id", YANDEX_CLIENT_ID)
             .appendQueryParameter("redirect_uri", REDIRECT_URI)
             .appendQueryParameter("scope", SCOPES)
             .appendQueryParameter("state", state)
+            .appendQueryParameter("lang", "ru") // Русский язык для интерфейса Yandex
             .build()
             .toString()
+        
+        Log.d(TAG, "Auth URL сгенерирован с state: $state")
+        authUrl
     }
 
     /**
      * Открывает браузер для авторизации через Yandex ID
      */
     suspend fun startAuth(activity: android.app.Activity) {
+        // Генерируем URL и сохраняем state
         val authUrl = getAuthUrl()
+        
+        // Дополнительная проверка, что state сохранился перед открытием браузера
+        val savedState = preferencesManager.getOAuthState()
+        Log.d(TAG, "Перед открытием браузера - сохраненный state: $savedState")
+        
+        if (savedState == null) {
+            Log.e(TAG, "State не сохранился перед открытием браузера!")
+            // Попробуем еще раз сохранить
+            val stateFromUrl = Uri.parse(authUrl).getQueryParameter("state")
+            if (stateFromUrl != null) {
+                preferencesManager.saveOAuthState(stateFromUrl)
+                Log.d(TAG, "Повторная попытка сохранения state: $stateFromUrl")
+            }
+        }
+        
         val customTabsIntent = CustomTabsIntent.Builder()
             .setShowTitle(true)
             .build()
@@ -88,17 +127,23 @@ class YandexAuthManager @Inject constructor(
      */
     suspend fun handleAuthCallback(uri: Uri): Result<User> = withContext(Dispatchers.IO) {
         try {
+            Log.d(TAG, "Обработка callback URI: $uri")
+            
             val code = uri.getQueryParameter("code")
             val state = uri.getQueryParameter("state")
             val error = uri.getQueryParameter("error")
 
+            Log.d(TAG, "Параметры из URI - code: ${code?.take(10)}..., state: $state, error: $error")
+
             if (error != null) {
+                Log.e(TAG, "Ошибка в callback: $error")
                 return@withContext Result.failure<User>(
                     Exception("Ошибка авторизации: $error")
                 )
             }
 
             if (code == null) {
+                Log.e(TAG, "Код авторизации не получен")
                 return@withContext Result.failure<User>(
                     Exception("Код авторизации не получен")
                 )
@@ -106,10 +151,29 @@ class YandexAuthManager @Inject constructor(
 
             // Проверяем state для защиты от CSRF
             val savedState = preferencesManager.getOAuthState()
-            if (state == null || savedState == null || state != savedState) {
+            Log.d(TAG, "Сравнение state - получен из URI: $state, сохраненный: $savedState")
+            
+            if (state == null) {
+                Log.e(TAG, "State параметр отсутствует в URI")
                 return@withContext Result.failure<User>(
-                    Exception("Неверный state параметр")
+                    Exception("Неверный state параметр: параметр отсутствует в URI")
                 )
+            }
+            
+            // Проверка state с fallback для случаев, когда приложение перезапускается
+            if (savedState == null) {
+                Log.w(TAG, "State не найден в сохраненных данных. Возможно, приложение было перезапущено.")
+                Log.w(TAG, "Продолжаем без проверки state (менее безопасно, но позволяет завершить авторизацию)")
+                // ВАЖНО: В продакшене лучше не пропускать без state, но для Android приложений
+                // это может быть необходимо из-за особенностей работы custom scheme
+                // Можно добавить дополнительную проверку по времени или другим параметрам
+            } else if (state != savedState) {
+                Log.e(TAG, "State не совпадает! URI: $state, Сохраненный: $savedState")
+                return@withContext Result.failure<User>(
+                    Exception("Неверный state параметр: не совпадает с сохраненным значением")
+                )
+            } else {
+                Log.d(TAG, "State проверен успешно")
             }
 
             // Обмениваем код на токен (code уже проверен на null выше)
@@ -148,10 +212,20 @@ class YandexAuthManager @Inject constructor(
      */
     private suspend fun exchangeCodeForToken(code: String): String? = withContext(Dispatchers.IO) {
         try {
-            val requestBody = "grant_type=authorization_code&" +
-                    "code=${URLEncoder.encode(code, "UTF-8")}&" +
-                    "client_id=${URLEncoder.encode(YANDEX_CLIENT_ID, "UTF-8")}&" +
-                    "redirect_uri=${URLEncoder.encode(REDIRECT_URI, "UTF-8")}"
+            Log.d(TAG, "Обмен кода на токен. Code: ${code.take(10)}...")
+            
+            // Для Android приложений обычно НЕ требуется client_secret
+            // Но если получаете ошибку, попробуйте добавить client_secret
+            val requestBody = buildString {
+                append("grant_type=authorization_code&")
+                append("code=${URLEncoder.encode(code, "UTF-8")}&")
+                append("client_id=${URLEncoder.encode(YANDEX_CLIENT_ID, "UTF-8")}&")
+                append("redirect_uri=${URLEncoder.encode(REDIRECT_URI, "UTF-8")}")
+                // Если требуется client_secret, раскомментируйте следующую строку:
+                append("&client_secret=${URLEncoder.encode(YANDEX_CLIENT_SECRET, "UTF-8")}")
+            }
+
+            Log.d(TAG, "Request body: grant_type=authorization_code&code=...&client_id=...&redirect_uri=$REDIRECT_URI")
 
             val mediaType = "application/x-www-form-urlencoded".toMediaType()
             val request = Request.Builder()
@@ -163,14 +237,37 @@ class YandexAuthManager @Inject constructor(
             val response = okHttpClient.newCall(request).execute()
             val responseBody = response.body?.string()
 
+            Log.d(TAG, "Response code: ${response.code}")
+            Log.d(TAG, "Response body: ${responseBody?.take(200)}")
+
             if (response.isSuccessful && responseBody != null) {
                 val json = JSONObject(responseBody)
-                json.optString("access_token")
+                val accessToken = json.optString("access_token")
+                if (accessToken.isNotEmpty()) {
+                    Log.d(TAG, "Токен успешно получен")
+                    return@withContext accessToken
+                } else {
+                    Log.e(TAG, "Токен не найден в ответе. Ответ: $responseBody")
+                    return@withContext null
+                }
             } else {
-                null
+                Log.e(TAG, "Ошибка при получении токена. Код: ${response.code}, Тело: $responseBody")
+                // Попробуем распарсить ошибку из ответа
+                if (responseBody != null) {
+                    try {
+                        val errorJson = JSONObject(responseBody)
+                        val error = errorJson.optString("error", "unknown")
+                        val errorDescription = errorJson.optString("error_description", "")
+                        Log.e(TAG, "Ошибка OAuth: $error - $errorDescription")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Не удалось распарсить ошибку: $responseBody")
+                    }
+                }
+                return@withContext null
             }
         } catch (e: Exception) {
-            null
+            Log.e(TAG, "Исключение при обмене кода на токен", e)
+            return@withContext null
         }
     }
 

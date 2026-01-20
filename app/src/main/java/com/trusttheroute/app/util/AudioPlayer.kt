@@ -35,6 +35,11 @@ class AudioPlayer @Inject constructor(
     fun play(url: String, onCompletion: (() -> Unit)? = null) {
         try {
             android.util.Log.d("AudioPlayer", "Playing audio: $url")
+            
+            // Останавливаем текущее воспроизведение перед загрузкой нового
+            if (player.isPlaying) {
+                player.stop()
+            }
             player.clearMediaItems()
             
             // Формируем правильный URI для файлов из assets
@@ -62,16 +67,19 @@ class AudioPlayer @Inject constructor(
                 .createMediaSource(MediaItem.fromUri(uri))
             
             android.util.Log.d("AudioPlayer", "MediaSource created, preparing...")
-            player.setMediaSource(mediaSource)
-            player.prepare()
-            player.play()
             
-            player.addListener(object : Player.Listener {
+            // Создаем listener для отслеживания готовности плеера
+            val listener = object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     android.util.Log.d("AudioPlayer", "Playback state: $playbackState")
                     when (playbackState) {
                         Player.STATE_READY -> {
                             android.util.Log.d("AudioPlayer", "Player ready, duration: ${player.duration}ms")
+                            // Убеждаемся, что воспроизведение началось
+                            if (!player.isPlaying) {
+                                android.util.Log.d("AudioPlayer", "Starting playback after ready state")
+                                player.play()
+                            }
                         }
                         Player.STATE_ENDED -> {
                             android.util.Log.d("AudioPlayer", "Playback ended")
@@ -90,8 +98,21 @@ class AudioPlayer @Inject constructor(
                 override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                     android.util.Log.e("AudioPlayer", "Playback error: ${error.message}", error)
                     android.util.Log.e("AudioPlayer", "Error type: ${error.errorCode}", error)
+                    player.removeListener(this)
                 }
-            })
+            }
+            
+            // Добавляем listener перед установкой источника
+            player.addListener(listener)
+            
+            // Устанавливаем источник и готовим плеер
+            player.setMediaSource(mediaSource)
+            player.prepare()
+            
+            // Пытаемся начать воспроизведение сразу
+            // Если плеер еще не готов, он начнет воспроизведение автоматически в STATE_READY
+            player.play()
+            
         } catch (e: Exception) {
             android.util.Log.e("AudioPlayer", "Error playing audio: $url", e)
             e.printStackTrace()
