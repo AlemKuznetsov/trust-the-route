@@ -16,6 +16,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -86,11 +88,16 @@ fun ThemeScreen(
                     titleContentColor = if (isDarkTheme) Blue400 else BluePrimary,
                     navigationIconContentColor = if (isDarkTheme) Blue400 else BluePrimary
                 ),
-                modifier = Modifier.border(
-                    width = 1.dp,
-                    color = if (isDarkTheme) DarkBorder else BorderLight,
-                    shape = RoundedCornerShape(0.dp)
-                )
+                modifier = Modifier.drawBehind {
+                    // Рисуем только нижнюю границу
+                    val borderColor = if (isDarkTheme) DarkBorder else BorderLight
+                    drawLine(
+                        color = borderColor,
+                        start = Offset(0f, size.height),
+                        end = Offset(size.width, size.height),
+                        strokeWidth = 1.dp.toPx()
+                    )
+                }
             )
             
             AnimatedVisibility(

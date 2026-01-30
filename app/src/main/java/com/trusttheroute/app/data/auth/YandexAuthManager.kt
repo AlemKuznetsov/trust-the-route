@@ -2,6 +2,8 @@ package com.trusttheroute.app.data.auth
 
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.util.Log
 import androidx.browser.customtabs.CustomTabsIntent
@@ -50,6 +52,7 @@ class YandexAuthManager @Inject constructor(
         // Формат должен быть: trusttheroute://oauth/yandex (без слеша в конце!)
         private const val REDIRECT_URI = "trusttheroute://oauth/yandex"
         
+        // Используем правильный endpoint для авторизации Yandex ID
         private const val YANDEX_AUTH_URL = "https://oauth.yandex.ru/authorize"
         private const val YANDEX_TOKEN_URL = "https://oauth.yandex.ru/token"
         private const val YANDEX_USER_INFO_URL = "https://login.yandex.ru/info"
@@ -87,16 +90,41 @@ class YandexAuthManager @Inject constructor(
             .build()
             .toString()
         
-        Log.d(TAG, "Auth URL сгенерирован с state: $state")
+        Log.d(TAG, "=== Yandex OAuth URL ===")
+        Log.d(TAG, "Client ID: $YANDEX_CLIENT_ID")
+        Log.d(TAG, "Redirect URI: $REDIRECT_URI")
+        Log.d(TAG, "Scopes: $SCOPES")
+        Log.d(TAG, "State: $state")
+        Log.d(TAG, "Full URL: $authUrl")
+        Log.d(TAG, "========================")
+        
         authUrl
+    }
+
+    /**
+     * Проверяет наличие интернет-соединения
+     */
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
     /**
      * Открывает браузер для авторизации через Yandex ID
      */
     suspend fun startAuth(activity: android.app.Activity) {
+        // Проверяем наличие интернет-соединения
+        if (!isNetworkAvailable()) {
+            Log.e(TAG, "Нет интернет-соединения")
+            throw Exception("Нет подключения к интернету. Проверьте настройки сети и попробуйте снова.")
+        }
+        
         // Генерируем URL и сохраняем state
         val authUrl = getAuthUrl()
+        Log.d(TAG, "Открытие браузера для авторизации: $authUrl")
         
         // Дополнительная проверка, что state сохранился перед открытием браузера
         val savedState = preferencesManager.getOAuthState()
@@ -112,13 +140,46 @@ class YandexAuthManager @Inject constructor(
             }
         }
         
-        val customTabsIntent = CustomTabsIntent.Builder()
-            .setShowTitle(true)
-            .build()
-        
-        // Запускаем на главном потоке, так как это UI операция
-        kotlinx.coroutines.withContext(Dispatchers.Main) {
-            customTabsIntent.launchUrl(activity, Uri.parse(authUrl))
+        try {
+            Log.d(TAG, "Попытка открыть CustomTabs с URL: $authUrl")
+            val customTabsIntent = CustomTabsIntent.Builder()
+                .setShowTitle(true)
+                .build()
+            
+            // Запускаем на главном потоке, так как это UI операция
+            kotlinx.coroutines.withContext(Dispatchers.Main) {
+                val uri = Uri.parse(authUrl)
+                Log.d(TAG, "Открытие CustomTabs с URI: $uri")
+                
+                // Проверяем, что есть приложение для обработки этого URL
+                val packageManager = activity.packageManager
+                val resolveInfo = customTabsIntent.intent.resolveActivity(packageManager)
+                
+                if (resolveInfo == null) {
+                    Log.e(TAG, "Нет приложения для открытия CustomTabs")
+                    throw Exception("Нет браузера для открытия страницы авторизации. Установите браузер и попробуйте снова.")
+                }
+                
+                customTabsIntent.launchUrl(activity, uri)
+                Log.d(TAG, "CustomTabs открыт успешно, браузер должен открыться")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Ошибка при открытии браузера через CustomTabs", e)
+            // Fallback: пытаемся открыть через обычный Intent
+            try {
+                Log.d(TAG, "Попытка открыть через обычный Intent")
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
+                val packageManager = activity.packageManager
+                if (intent.resolveActivity(packageManager) != null) {
+                    activity.startActivity(intent)
+                    Log.d(TAG, "Браузер открыт через обычный Intent")
+                } else {
+                    throw Exception("Нет браузера для открытия страницы авторизации. Установите браузер и попробуйте снова.")
+                }
+            } catch (fallbackException: Exception) {
+                Log.e(TAG, "Ошибка при открытии через обычный Intent", fallbackException)
+                throw Exception("Не удалось открыть браузер для авторизации: ${fallbackException.message}. Проверьте подключение к интернету и наличие браузера.")
+            }
         }
     }
 
@@ -177,32 +238,53 @@ class YandexAuthManager @Inject constructor(
             }
 
             // Обмениваем код на токен (code уже проверен на null выше)
+            Log.d(TAG, "Начало обмена кода на токен")
             val accessToken = exchangeCodeForToken(code!!) ?: return@withContext Result.failure<User>(
                 Exception("Не удалось получить токен")
             )
+            Log.d(TAG, "Токен получен, длина: ${accessToken.length}")
 
             // Получаем информацию о пользователе
-            val userInfo = getUserInfo(accessToken) ?: return@withContext Result.failure<User>(
-                Exception("Не удалось получить информацию о пользователе")
-            )
+            Log.d(TAG, "Начало получения информации о пользователе")
+            val userInfo = getUserInfo(accessToken)
+            if (userInfo == null) {
+                Log.e(TAG, "Не удалось получить информацию о пользователе")
+                return@withContext Result.failure<User>(
+                    Exception("Не удалось получить информацию о пользователе")
+                )
+            }
+            Log.d(TAG, "Информация о пользователе получена: ${userInfo.toString().take(200)}")
 
             // Создаем пользователя
-            val user = User(
-                id = userInfo.getString("id"),
-                email = userInfo.getString("default_email") ?: userInfo.optString("emails", "").split(",").firstOrNull() ?: "",
-                name = "${userInfo.optString("first_name", "")} ${userInfo.optString("last_name", "")}".trim()
-                    .ifEmpty { userInfo.optString("display_name", "") }
-                    .ifEmpty { userInfo.getString("login") },
-                token = accessToken
-            )
+            Log.d(TAG, "Создание объекта User")
+            val user = try {
+                User(
+                    id = userInfo.getString("id"),
+                    email = userInfo.getString("default_email") ?: userInfo.optString("emails", "").split(",").firstOrNull() ?: "",
+                    name = "${userInfo.optString("first_name", "")} ${userInfo.optString("last_name", "")}".trim()
+                        .ifEmpty { userInfo.optString("display_name", "") }
+                        .ifEmpty { userInfo.getString("login") },
+                    token = accessToken
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Ошибка при создании объекта User", e)
+                return@withContext Result.failure<User>(
+                    Exception("Ошибка при создании пользователя: ${e.message}")
+                )
+            }
+            Log.d(TAG, "Пользователь создан: id=${user.id}, email=${user.email}, name=${user.name}")
 
             // Сохраняем пользователя и токен
+            Log.d(TAG, "Сохранение токена и данных пользователя")
             preferencesManager.saveToken(accessToken)
             preferencesManager.saveUser(user)
             preferencesManager.clearOAuthState()
+            Log.d(TAG, "Данные сохранены успешно")
 
+            Log.d(TAG, "Авторизация завершена успешно")
             Result.success(user)
         } catch (e: Exception) {
+            Log.e(TAG, "Исключение при обработке callback", e)
             Result.failure(e)
         }
     }
@@ -276,20 +358,33 @@ class YandexAuthManager @Inject constructor(
      */
     private suspend fun getUserInfo(accessToken: String): JSONObject? = withContext(Dispatchers.IO) {
         try {
+            Log.d(TAG, "Запрос информации о пользователе по токену")
+            val url = "$YANDEX_USER_INFO_URL?format=json"
+            Log.d(TAG, "URL для получения информации: $url")
+            
             val request = Request.Builder()
-                .url("$YANDEX_USER_INFO_URL?format=json")
+                .url(url)
                 .addHeader("Authorization", "OAuth $accessToken")
                 .build()
 
+            Log.d(TAG, "Выполнение запроса к API Yandex")
             val response = okHttpClient.newCall(request).execute()
             val responseBody = response.body?.string()
 
+            Log.d(TAG, "Response code: ${response.code}")
+            Log.d(TAG, "Response body length: ${responseBody?.length ?: 0}")
+            
             if (response.isSuccessful && responseBody != null) {
-                JSONObject(responseBody)
+                Log.d(TAG, "Ответ успешен, парсинг JSON")
+                val json = JSONObject(responseBody)
+                Log.d(TAG, "JSON распарсен успешно")
+                json
             } else {
+                Log.e(TAG, "Ошибка при получении информации о пользователе. Code: ${response.code}, Body: ${responseBody?.take(200)}")
                 null
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Исключение при получении информации о пользователе", e)
             null
         }
     }

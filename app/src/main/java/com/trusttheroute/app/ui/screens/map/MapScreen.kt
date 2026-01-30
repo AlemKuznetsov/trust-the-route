@@ -19,6 +19,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -50,22 +52,34 @@ fun MapScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     var centerOnLocationTrigger by remember { mutableStateOf(0) }
+    var shouldCenterOnLocation by remember { mutableStateOf(false) }
+    var hasCenteredOnFirstLocation by remember { mutableStateOf(false) } // Флаг для отслеживания первого центрирования
     
     // Отслеживаем состояние drawer для закрытия при клике на карту
     val isDrawerOpen by remember {
         derivedStateOf { drawerState.currentValue == DrawerValue.Open }
     }
 
-    // Проверка разрешения на геолокацию
-    val hasLocationPermission = remember {
-        ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED ||
-        ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
+    // Проверка разрешения на геолокацию (обновляется динамически)
+    val hasLocationPermission by remember {
+        derivedStateOf {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+    
+    // Отслеживаем изменения разрешения для обновления UI
+    LaunchedEffect(hasLocationPermission) {
+        android.util.Log.d("MapScreen", "hasLocationPermission изменилось: $hasLocationPermission")
+        if (hasLocationPermission) {
+            viewModel.startLocationTracking()
+        }
     }
 
     // Launcher для запроса разрешения на геолокацию
@@ -75,17 +89,31 @@ fun MapScreen(
         val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
         val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
         
+        android.util.Log.d("MapScreen", "Результат запроса разрешения: fine=$fineLocationGranted, coarse=$coarseLocationGranted")
+        
         if (fineLocationGranted || coarseLocationGranted) {
-            // Разрешение получено, запускаем отслеживание местоположения
+            // Разрешение получено (может быть "While using the app" или "Only this time")
+            android.util.Log.d("MapScreen", "Разрешение получено, запускаем отслеживание местоположения")
             viewModel.startLocationTracking()
-        } else {
-            // Разрешение отклонено
+            
+            // Пытаемся получить местоположение немедленно и центрировать карту
             scope.launch {
-                snackbarHostState.showSnackbar(
-                    message = "Для работы карты необходимо разрешение на геолокацию",
-                    duration = SnackbarDuration.Long
-                )
+                try {
+                    val currentLoc = viewModel.getCurrentLocation()
+                    if (currentLoc != null) {
+                        android.util.Log.d("MapScreen", "Получено местоположение после выдачи разрешения, центрируем карту")
+                        centerOnLocationTrigger++
+                    } else {
+                        shouldCenterOnLocation = true
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("MapScreen", "Ошибка при получении местоположения после выдачи разрешения", e)
+                }
             }
+        } else {
+            // Разрешение отклонено ("Don't allow")
+            android.util.Log.d("MapScreen", "Разрешение отклонено пользователем")
+            // Не показываем сообщение - кнопка все равно доступна для повторного запроса
         }
     }
 
@@ -94,7 +122,7 @@ fun MapScreen(
         if (routeId.isNotEmpty()) {
             viewModel.loadRoute(routeId)
             
-            // Запрашиваем разрешение, если его нет
+            // При первой загрузке маршрута всегда запрашиваем разрешение автоматически
             if (!hasLocationPermission) {
                 locationPermissionLauncher.launch(
                     arrayOf(
@@ -103,6 +131,7 @@ fun MapScreen(
                     )
                 )
             } else {
+                // Если разрешение уже есть, запускаем отслеживание местоположения
                 viewModel.startLocationTracking()
             }
         }
@@ -115,6 +144,37 @@ fun MapScreen(
                 message = error,
                 duration = SnackbarDuration.Short
             )
+        }
+    }
+
+    // Автоматическое центрирование карты при первом получении местоположения
+    // Используем ключ для отслеживания первого получения местоположения
+    // LaunchedEffect срабатывает только когда currentLocation меняется с null на не-null
+    var locationKey by remember { mutableStateOf<android.location.Location?>(null) }
+    
+    LaunchedEffect(uiState.currentLocation) {
+        val currentLoc = uiState.currentLocation
+        // Проверяем, это первое получение местоположения (было null, стало не null)
+        if (currentLoc != null && locationKey == null && !hasCenteredOnFirstLocation) {
+                // Первое получение местоположения - автоматически центрируем карту
+            android.util.Log.d("MapScreen", "Первое получение местоположения после открытия карты, автоматически центрируем карту")
+                centerOnLocationTrigger++
+                hasCenteredOnFirstLocation = true
+            locationKey = currentLoc
+        } else if (currentLoc != null && shouldCenterOnLocation) {
+                // Центрирование по нажатию кнопки
+                android.util.Log.d("MapScreen", "Получено местоположение после нажатия кнопки, центрируем карту")
+                centerOnLocationTrigger++
+                shouldCenterOnLocation = false
+            locationKey = currentLoc
+        } else if (currentLoc != null) {
+            // При обновлении местоположения (каждые 2 секунды) НЕ центрируем карту автоматически
+            // Просто обновляем ключ, но НЕ центрируем
+            locationKey = currentLoc
+            android.util.Log.d("MapScreen", "Местоположение обновлено, но центрирование НЕ выполняется (hasCenteredOnFirstLocation=$hasCenteredOnFirstLocation, shouldCenterOnLocation=$shouldCenterOnLocation)")
+        } else {
+            // Если местоположение стало null, сбрасываем ключ
+            locationKey = null
         }
     }
 
@@ -276,18 +336,16 @@ fun MapScreen(
                     titleContentColor = if (isDarkTheme) Blue400 else White,
                     navigationIconContentColor = if (isDarkTheme) Blue400 else White
                 ),
-                modifier = Modifier
-                    .then(
-                        if (isDarkTheme) {
-                            Modifier.border(
-                                width = 1.dp,
-                                color = DarkBorder,
-                                shape = RoundedCornerShape(0.dp)
+                modifier = Modifier.drawBehind {
+                    // Рисуем только нижнюю границу
+                    val borderColor = if (isDarkTheme) DarkBorder else BorderLight
+                    drawLine(
+                        color = borderColor,
+                        start = Offset(0f, size.height),
+                        end = Offset(size.width, size.height),
+                        strokeWidth = 1.dp.toPx()
                             )
-                        } else {
-                            Modifier
-                        }
-                    )
+                }
                     .then(
                         if (isDrawerOpen) {
                             Modifier.clickable { scope.launch { drawerState.close() } }
@@ -351,22 +409,68 @@ fun MapScreen(
                 }
 
                 // Кнопка "Моё местоположение"
-                if (uiState.currentLocation != null) {
-                    FloatingActionButton(
-                        onClick = {
-                            centerOnLocationTrigger++
-                        },
-                        modifier = Modifier
-                            .align(androidx.compose.ui.Alignment.BottomEnd)
-                            .padding(16.dp),
-                        containerColor = if (isDarkTheme) DarkSurface else BluePrimary,
-                        contentColor = if (isDarkTheme) Blue400 else White
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.MyLocation,
-                            contentDescription = "Моё местоположение",
-                            tint = if (isDarkTheme) Blue400 else White
-                        )
+                // Отображаем кнопку только когда карточка достопримечательности не видна
+                if (uiState.nearbyAttraction == null) {
+                FloatingActionButton(
+                    onClick = {
+                        android.util.Log.d("MapScreen", "Кнопка 'Моё местоположение' нажата")
+                        
+                        // Проверяем разрешение динамически
+                        val currentHasPermission = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED ||
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED
+                        
+                        if (currentHasPermission) {
+                            // Если разрешение есть, определяем местоположение
+                            android.util.Log.d("MapScreen", "Разрешение есть, определяем местоположение")
+                            scope.launch {
+                                try {
+                                    // Запускаем отслеживание местоположения, если еще не запущено
+                                    viewModel.startLocationTracking()
+                                    
+                                    // Пытаемся получить текущее местоположение немедленно
+                                    val currentLoc = viewModel.getCurrentLocation()
+                                    
+                                    if (currentLoc != null) {
+                                        android.util.Log.d("MapScreen", "Получено текущее местоположение: lat=${currentLoc.latitude}, lng=${currentLoc.longitude}")
+                                        // Центрируем карту на текущем местоположении
+                                        centerOnLocationTrigger++
+                                    } else {
+                                        android.util.Log.d("MapScreen", "Текущее местоположение недоступно, ждем обновления...")
+                                        // Устанавливаем флаг, чтобы центрировать карту при получении местоположения
+                                        shouldCenterOnLocation = true
+                                    }
+                                } catch (e: Exception) {
+                                    android.util.Log.e("MapScreen", "Ошибка при обработке нажатия кнопки местоположения", e)
+                                }
+                            }
+                        } else {
+                            // Если разрешения нет, запрашиваем его
+                            android.util.Log.d("MapScreen", "Разрешения нет, запрашиваем")
+                            locationPermissionLauncher.launch(
+                                arrayOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
+                            )
+                        }
+                    },
+                    modifier = Modifier
+                        .align(androidx.compose.ui.Alignment.BottomEnd)
+                            .padding(bottom = 24.dp, end = 16.dp), // Поднята выше на 8dp
+                    containerColor = if (isDarkTheme) DarkSurface else BluePrimary,
+                    contentColor = if (isDarkTheme) Blue400 else White
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MyLocation,
+                        contentDescription = "Моё местоположение",
+                        tint = if (isDarkTheme) Blue400 else White
+                    )
                     }
                 }
 

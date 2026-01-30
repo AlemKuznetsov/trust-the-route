@@ -1,0 +1,22 @@
+ktor:
+  deployment:
+    port: 8080
+    host: "0.0.0.0"
+  application:
+    modules:
+      - com.trusttheroute.backend.ApplicationKt.module
+
+database:
+  driver: "org.postgresql.Driver"
+  url: "jdbc:postgresql://localhost:5432/trust_the_route"
+  user: "trust_user"
+  password: ${DB_PASSWORD:your_password_here}
+  maxPoolSize: 10
+  minIdle: 2
+
+jwt:
+  secret: ${JWT_SECRET:your_secret_key_minimum_32_characters_long}
+  issuer: "trust-the-route"
+  audience: "trust-the-route-users"
+  realm: "Trust The Route"
+  expirationHours: 24

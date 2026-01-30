@@ -18,8 +18,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.trusttheroute.app.ui.theme.*
@@ -34,6 +37,7 @@ fun SettingsScreen(
     onFontSizeClick: () -> Unit = {},
     onPrivacyClick: () -> Unit = {},
     onAccountClick: () -> Unit = {},
+    onAppInfoClick: () -> Unit = {},
     onAboutClick: () -> Unit = {}
 ) {
     val isDarkTheme = isDarkTheme()
@@ -109,11 +113,15 @@ fun SettingsScreen(
                     titleContentColor = if (isDarkTheme) Blue400 else BluePrimary,
                     navigationIconContentColor = if (isDarkTheme) Blue400 else BluePrimary
                 ),
-                modifier = Modifier.border(
-                    width = 1.dp,
-                    color = if (isDarkTheme) DarkBorder else BorderLight,
-                    shape = RoundedCornerShape(0.dp)
-                )
+                modifier = Modifier.drawBehind {
+                    // Рисуем только нижнюю границу
+                    drawLine(
+                        color = if (isDarkTheme) DarkBorder else BorderLight,
+                        start = Offset(0f, size.height),
+                        end = Offset(size.width, size.height),
+                        strokeWidth = 1.dp.toPx()
+                    )
+                }
             )
             
             // Список категорий с анимацией
@@ -191,7 +199,7 @@ fun SettingsScreen(
                         icon = Icons.Default.Info,
                         iconBackgroundColor = Color(0xFFFAF5FF), // purple-50
                         iconTint = Color(0xFF9333EA), // purple-600
-                        onClick = onAboutClick
+                        onClick = onAppInfoClick
                     )
                 }
             }

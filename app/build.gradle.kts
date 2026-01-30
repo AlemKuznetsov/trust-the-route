@@ -3,7 +3,6 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
     id("kotlin-kapt")
-    id("com.google.gms.google-services")
 }
 
 android {
@@ -116,6 +115,8 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.48")
     kapt("com.google.dagger:hilt-android-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    implementation("androidx.hilt:hilt-work:1.1.0")
+    kapt("androidx.hilt:hilt-compiler:1.1.0")
 
     // Room
     implementation("androidx.room:room-runtime:2.6.1")
@@ -143,9 +144,8 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
 
-    // Firebase
-    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-    implementation("com.google.firebase:firebase-messaging-ktx")
+    // WorkManager для фоновых задач и уведомлений
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")

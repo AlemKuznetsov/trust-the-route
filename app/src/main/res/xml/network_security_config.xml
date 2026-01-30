@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Разрешаем HTTP для разработки -->
+    <!-- ВАЖНО: Для продакшена используйте только HTTPS! -->
+    
+    <!-- Базовая конфигурация: разрешаем cleartext для разработки -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    
+    <!-- Специфичные домены (опционально, для более строгой настройки) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Разрешаем HTTP для IP адреса сервера (только для разработки) -->
+        <domain includeSubdomains="false">158.160.180.232</domain>
+        <!-- Если будете использовать домен, добавьте его здесь -->
+        <!-- <domain includeSubdomains="true">api.trusttheroute.com</domain> -->
+    </domain-config>
+    
+    <!-- Для продакшена замените base-config на: -->
+    <!--
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    -->
+</network-security-config>

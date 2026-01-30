@@ -33,6 +33,7 @@ class PreferencesManager @Inject constructor(
         private val NOTIFICATIONS_ENABLED_KEY = stringPreferencesKey("notifications_enabled")
         private val AUDIO_GUIDE_ENABLED_KEY = stringPreferencesKey("audio_guide_enabled")
         private val OAUTH_STATE_KEY = stringPreferencesKey("oauth_state")
+        private val LAST_NOTIFICATION_ID_KEY = stringPreferencesKey("last_notification_id")
     }
 
     suspend fun saveToken(token: String) {
@@ -136,5 +137,15 @@ class PreferencesManager @Inject constructor(
         context.dataStore.edit { preferences ->
             preferences.remove(OAUTH_STATE_KEY)
         }
+    }
+
+    suspend fun setLastNotificationId(notificationId: String) {
+        context.dataStore.edit { preferences ->
+            preferences[LAST_NOTIFICATION_ID_KEY] = notificationId
+        }
+    }
+
+    val lastNotificationId: Flow<String?> = context.dataStore.data.map {
+        it[LAST_NOTIFICATION_ID_KEY]
     }
 }

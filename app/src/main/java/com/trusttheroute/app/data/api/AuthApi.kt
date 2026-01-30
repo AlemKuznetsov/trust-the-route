@@ -25,6 +25,10 @@ data class AuthResponse(
     val token: String
 )
 
+data class MessageResponse(
+    val message: String
+)
+
 interface AuthApi {
     @POST("auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
@@ -33,5 +37,5 @@ interface AuthApi {
     suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
 
     @POST("auth/reset-password")
-    suspend fun resetPassword(@Body request: ResetPasswordRequest): Response<Unit>
+    suspend fun resetPassword(@Body request: ResetPasswordRequest): Response<MessageResponse>
 }

@@ -17,6 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -65,11 +67,16 @@ fun RoutesScreen(
                 titleContentColor = headerTextColor,
                 navigationIconContentColor = headerTextColor
             ),
-            modifier = if (isDarkTheme) Modifier.border(
-                width = 1.dp,
-                color = DarkBorder,
-                shape = RoundedCornerShape(0.dp)
-            ) else Modifier
+            modifier = Modifier.drawBehind {
+                // Рисуем только нижнюю границу
+                val borderColor = if (isDarkTheme) DarkBorder else BorderLight
+                drawLine(
+                    color = borderColor,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
         )
 
         // Поиск

@@ -1,15 +1,35 @@
 package com.trusttheroute.app
 
 import android.app.Application
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.yandex.mapkit.MapKitFactory
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 @HiltAndroidApp
-class TrustTheRouteApplication : Application() {
+class TrustTheRouteApplication : Application(), Configuration.Provider {
+    
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+    
+    private val config by lazy {
+        Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
+    }
+    
+    override val workManagerConfiguration: Configuration
+        get() = config
+    
     override fun onCreate() {
         super.onCreate()
+        
+        // Инициализация WorkManager с кастомной конфигурацией
+        // WorkManager автоматически использует Configuration.Provider если он реализован
+        // Явная инициализация не требуется, если провайдер удален из манифеста
+        
         try {
             // Установка API ключа Yandex MapKit
             // Ключ должен быть установлен ПЕРЕД инициализацией

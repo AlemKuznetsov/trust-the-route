@@ -1,0 +1,93 @@
+@startuml
+title Trust The Route - simplified UML (layers, key components, stored data)
+
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+package "UI layer (Jetpack Compose)" {
+  [MapScreen] as MapScreen
+  [RoutesScreen] as RoutesScreen
+  [AuthScreen] as AuthScreen
+}
+
+package "ViewModel (MVVM)" {
+  component "MapViewModel\nstores:\n- uiState (MapUiState)\n- currentPlayingAttractionId\n- isLocationTrackingActive\n- isAttractionCardManuallyOpened" as MapViewModel
+
+  component "MapUiState\nstores:\n- route\n- attractions\n- currentLocation\n- nearbyAttraction\n- isAudioPlaying\n- audioGuideEnabled\n- isLoading\n- error" as MapUiState
+
+  component "RoutesViewModel\nstores:\n- searchQuery\n- routes (filtered list)" as RoutesViewModel
+
+  component "AuthViewModel\nstores:\n- authState\n- isLoggedIn" as AuthViewModel
+}
+
+package "Domain model" {
+  component "Route\nstores:\n- id, number, name\n- description, polyline\n- history, stops\n- duration, interval, startPoint" as Route
+  component "Attraction\nstores:\n- id, routeId, name\n- description, lat/lng\n- imageUrls, audioUrl\n- localImagePaths, localAudioPath\n- order" as Attraction
+  component "User\nstores:\n- id, email, name\n- token (optional)" as User
+}
+
+package "Data layer (Repository)" {
+  component "RouteRepository\nstores/uses:\n- RouteApi\n- Room (Route/Attraction)\n- RouteDataLoader\nprovides:\n- flows of routes/attractions\n- syncRoutes()" as RouteRepository
+
+  component "AuthRepository\nstores/uses:\n- AuthApi\n- DataStore token/user\nprovides:\n- login/register/reset\n- isLoggedIn/logout" as AuthRepository
+}
+
+package "Local storage" {
+  [Room DB\nstores:\n- routes\n- attractions] as RoomDB
+
+  [DataStore (PreferencesManager)\nstores:\n- token, user\n- theme/language/fontSize\n- notificationsEnabled/audioGuideEnabled\n- oauthState/lastNotificationId] as DataStore
+
+  [Assets (routes/*.json)] as Assets
+}
+
+package "Remote services" {
+  [Backend REST API] as BackendApi
+  [Yandex OAuth] as YandexOAuth
+  [Yandex Object Storage] as YandexStorage
+}
+
+package "Device/Platform services" {
+  [Google Fused Location] as FusedLocation
+  [Media3/ExoPlayer] as Media3
+  [Android Notifications] as Notifications
+}
+
+' ===== UI -> VM =====
+MapScreen --> MapViewModel
+RoutesScreen --> RoutesViewModel
+AuthScreen --> AuthViewModel
+
+' ===== VM -> Repos / Services =====
+MapViewModel --> RouteRepository
+MapViewModel ..> MapUiState : exposes state
+MapViewModel --> FusedLocation
+MapViewModel --> Media3
+MapViewModel --> DataStore
+
+RoutesViewModel --> RouteRepository
+AuthViewModel --> AuthRepository
+AuthViewModel --> YandexOAuth
+
+' ===== Repos -> Local/Remote =====
+RouteRepository --> BackendApi
+RouteRepository --> RoomDB
+RouteRepository --> Assets
+
+AuthRepository --> BackendApi
+AuthRepository --> DataStore
+
+' ===== Content delivery =====
+MapViewModel ..> YandexStorage : loads media by URL
+
+' ===== Notifications (optional) =====
+BackendApi ..> Notifications : push payloads
+
+' ===== Domain references (simplified) =====
+Route --> Attraction : contains (list)
+AuthViewModel ..> User
+RouteRepository ..> Route
+RouteRepository ..> Attraction
+
+@enduml
+

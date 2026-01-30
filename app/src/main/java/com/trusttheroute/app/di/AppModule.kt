@@ -2,6 +2,7 @@ package com.trusttheroute.app.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.work.WorkManager
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.trusttheroute.app.data.database.AppDatabase
@@ -58,5 +59,11 @@ object AppModule {
         gson: Gson
     ): RouteDataLoader {
         return RouteDataLoader(context, routeDao, attractionDao, gson)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
+        return WorkManager.getInstance(context)
     }
 }

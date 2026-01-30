@@ -11,6 +11,7 @@ import com.trusttheroute.app.util.AudioPlayer
 import com.trusttheroute.app.util.Constants
 import com.trusttheroute.app.util.LocationManager
 import com.trusttheroute.app.util.LocationUtils
+import com.trusttheroute.app.util.StorageUrlHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,6 +45,8 @@ class MapViewModel @Inject constructor(
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
 
     private var currentPlayingAttractionId: String? = null
+    private var isLocationTrackingActive = false
+    private var isAttractionCardManuallyOpened = false // Флаг для отслеживания ручного открытия карточки
 
     init {
         viewModelScope.launch {
@@ -120,19 +123,31 @@ class MapViewModel @Inject constructor(
     }
 
     fun startLocationTracking() {
+        if (isLocationTrackingActive) {
+            android.util.Log.d("MapViewModel", "Отслеживание местоположения уже активно")
+            return
+        }
+        
         if (!locationManager.hasLocationPermission()) {
+            android.util.Log.w("MapViewModel", "Нет разрешения на геолокацию")
             _uiState.value = _uiState.value.copy(
                 error = "Необходимо разрешение на геолокацию"
             )
             return
         }
 
+        android.util.Log.d("MapViewModel", "Запуск отслеживания местоположения")
+        isLocationTrackingActive = true
+
         locationManager.getLocationUpdates()
             .onEach { location ->
+                android.util.Log.d("MapViewModel", "Получено местоположение: lat=${location.latitude}, lng=${location.longitude}")
                 _uiState.value = _uiState.value.copy(currentLocation = location)
                 checkNearbyAttractions(location)
             }
             .catch { e ->
+                android.util.Log.e("MapViewModel", "Ошибка отслеживания местоположения", e)
+                isLocationTrackingActive = false
                 _uiState.value = _uiState.value.copy(
                     error = e.message ?: "Ошибка отслеживания местоположения"
                 )
@@ -161,6 +176,10 @@ class MapViewModel @Inject constructor(
             nearest?.let { attraction ->
                 // Если это новая достопримечательность или пользователь еще не был рядом
                 if (_uiState.value.nearbyAttraction?.id != attraction.id) {
+                    // Если карточка была открыта вручную, сбрасываем флаг при смене достопримечательности
+                    if (isAttractionCardManuallyOpened && _uiState.value.nearbyAttraction != null) {
+                        isAttractionCardManuallyOpened = false
+                    }
                     _uiState.value = _uiState.value.copy(nearbyAttraction = attraction)
                     
                     // Автоматическое воспроизведение аудио, если включено
@@ -170,10 +189,14 @@ class MapViewModel @Inject constructor(
                 }
             }
         } else {
-            // Если пользователь удалился от достопримечательности, останавливаем аудио
-            if (_uiState.value.nearbyAttraction != null) {
+            // Если пользователь удалился от достопримечательности
+            // НЕ закрываем карточку автоматически, если она была открыта вручную
+            if (_uiState.value.nearbyAttraction != null && !isAttractionCardManuallyOpened) {
+                android.util.Log.d("MapViewModel", "Пользователь удалился от достопримечательности, закрываем карточку автоматически")
                 stopAudio()
                 _uiState.value = _uiState.value.copy(nearbyAttraction = null)
+            } else if (_uiState.value.nearbyAttraction != null && isAttractionCardManuallyOpened) {
+                android.util.Log.d("MapViewModel", "Пользователь удалился от достопримечательности, но карточка открыта вручную - не закрываем")
             }
         }
     }
@@ -195,22 +218,13 @@ class MapViewModel @Inject constructor(
 
         stopAudio()
 
-        // Формируем правильный путь к аудиофайлу
-        val audioUrl = when {
-            // Если есть полный URL (начинается с http или file://)
-            attraction.audioUrl.isNotBlank() && (attraction.audioUrl.startsWith("http") || attraction.audioUrl.startsWith("file://")) -> {
-                attraction.audioUrl
-            }
-            // Если есть localAudioPath (имя файла), формируем путь к assets
-            attraction.localAudioPath != null && attraction.localAudioPath.isNotBlank() -> {
-                "file:///android_asset/audio/${attraction.localAudioPath}"
-            }
-            // Если audioUrl не пустой, но не начинается с http/file, считаем его именем файла
-            attraction.audioUrl.isNotBlank() -> {
-                "file:///android_asset/audio/${attraction.audioUrl}"
-            }
-            else -> null
-        }
+        // Используем StorageUrlHelper для получения приоритетного URL
+        // Приоритет: облачный URL -> локальный файл (fallback)
+        val audioUrl = StorageUrlHelper.getPrioritizedAudioUrl(
+            cloudUrl = attraction.audioUrl.takeIf { it.isNotEmpty() },
+            localPath = attraction.localAudioPath,
+            routeId = attraction.routeId
+        )
         
         android.util.Log.d("MapViewModel", "Playing audio for ${attraction.name}, URL: $audioUrl")
         
@@ -256,17 +270,34 @@ class MapViewModel @Inject constructor(
 
     fun selectAttraction(attraction: Attraction) {
         android.util.Log.d("MapViewModel", "selectAttraction called: ${attraction.name}")
+        isAttractionCardManuallyOpened = true // Карточка открыта вручную пользователем
         _uiState.value = _uiState.value.copy(nearbyAttraction = attraction)
-        android.util.Log.d("MapViewModel", "nearbyAttraction updated: ${_uiState.value.nearbyAttraction?.name}")
+        android.util.Log.d("MapViewModel", "nearbyAttraction updated: ${_uiState.value.nearbyAttraction?.name}, isManuallyOpened=$isAttractionCardManuallyOpened")
     }
 
     fun dismissAttractionCard() {
+        isAttractionCardManuallyOpened = false // Сбрасываем флаг при закрытии карточки
         _uiState.value = _uiState.value.copy(nearbyAttraction = null)
         stopAudio()
     }
 
+    suspend fun getCurrentLocation(): Location? {
+        return try {
+            val location = locationManager.getCurrentLocation()
+            if (location != null) {
+                android.util.Log.d("MapViewModel", "Получено текущее местоположение: lat=${location.latitude}, lng=${location.longitude}")
+                _uiState.value = _uiState.value.copy(currentLocation = location)
+            }
+            location
+        } catch (e: Exception) {
+            android.util.Log.e("MapViewModel", "Ошибка при получении текущего местоположения", e)
+            null
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
+        isLocationTrackingActive = false
         locationManager.stopLocationUpdates()
         audioPlayer.release()
     }

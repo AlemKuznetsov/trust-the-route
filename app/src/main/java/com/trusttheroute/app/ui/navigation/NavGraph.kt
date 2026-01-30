@@ -19,6 +19,7 @@ import com.trusttheroute.app.ui.screens.settings.LanguageScreen
 import com.trusttheroute.app.ui.screens.settings.ThemeScreen
 import com.trusttheroute.app.ui.screens.settings.NotificationsScreen
 import com.trusttheroute.app.ui.screens.settings.FontSizeScreen
+import com.trusttheroute.app.ui.screens.settings.AppInfoScreen
 
 sealed class Screen(val route: String) {
     object MainMenu : Screen("main_menu")
@@ -34,6 +35,7 @@ sealed class Screen(val route: String) {
     object Theme : Screen("theme")
     object Notifications : Screen("notifications")
     object FontSize : Screen("font_size")
+    object AppInfo : Screen("app_info")
     object About : Screen("about")
     object Login : Screen("login")
     object Register : Screen("register")
@@ -111,6 +113,7 @@ fun AppNavHost(
                 onFontSizeClick = { navController.navigate(Screen.FontSize.route) },
                 onPrivacyClick = { /* TODO: Navigate to privacy settings */ },
                 onAccountClick = { /* TODO: Navigate to account settings */ },
+                onAppInfoClick = { navController.navigate(Screen.AppInfo.route) },
                 onAboutClick = { navController.navigate(Screen.About.route) }
             )
         }
@@ -135,6 +138,12 @@ fun AppNavHost(
 
         composable(Screen.FontSize.route) {
             FontSizeScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.AppInfo.route) {
+            AppInfoScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }

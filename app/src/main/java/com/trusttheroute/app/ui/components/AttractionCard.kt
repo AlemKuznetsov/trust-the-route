@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.trusttheroute.app.domain.model.Attraction
 import com.trusttheroute.app.ui.theme.*
+import com.trusttheroute.app.util.StorageUrlHelper
 
 @Composable
 fun AttractionCard(
@@ -103,16 +104,12 @@ fun AttractionCard(
                             .padding(horizontal = 16.dp)
                     ) {
                         // Галерея изображений достопримечательности
-                        val imageUrls = buildList {
-                            // Добавляем локальные изображения
-                            attraction.localImagePaths.forEach { path ->
-                                add("file:///android_asset/images/$path")
-                            }
-                            // Добавляем URL изображения
-                            attraction.imageUrls.forEach { url ->
-                                if (url !in this) add(url)
-                            }
-                        }
+                        // Используем StorageUrlHelper для получения приоритетных URL
+                        val imageUrls = StorageUrlHelper.getPrioritizedImageUrls(
+                            cloudUrls = attraction.imageUrls,
+                            localPaths = attraction.localImagePaths,
+                            routeId = attraction.routeId
+                        )
                         
                         if (imageUrls.isNotEmpty()) {
                             if (imageUrls.size == 1) {
@@ -169,7 +166,14 @@ fun AttractionCard(
                     }
 
                     // Зафиксированный аудиоплеер внизу
-                    if (attraction.audioUrl.isNotEmpty() || attraction.localAudioPath != null) {
+                    // Используем приоритетный URL: сначала облачный, потом локальный
+                    val audioUrl = StorageUrlHelper.getPrioritizedAudioUrl(
+                        cloudUrl = attraction.audioUrl.takeIf { it.isNotEmpty() },
+                        localPath = attraction.localAudioPath,
+                        routeId = attraction.routeId
+                    )
+                    
+                    if (audioUrl.isNotEmpty()) {
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -238,7 +242,7 @@ fun AttractionCard(
                                                         onPlayAudio()
                                                     }
                                                 }
-                                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                                                .padding(horizontal = 12.dp, vertical = 12.dp)
                                         ) {
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
@@ -252,14 +256,16 @@ fun AttractionCard(
                                                         Icons.Default.PlayArrow
                                                     },
                                                     contentDescription = if (isAudioPlaying) "Пауза" else "Воспроизвести",
-                                                    modifier = Modifier.size(20.dp),
+                                                    modifier = Modifier.size(18.dp),
                                                     tint = White
                                                 )
-                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Spacer(modifier = Modifier.width(6.dp))
                                                 Text(
                                                     text = if (isAudioPlaying) "Пауза" else "Воспроизвести",
                                                     style = MaterialTheme.typography.labelLarge,
-                                                    color = White
+                                                    color = White,
+                                                    maxLines = 1,
+                                                    softWrap = false
                                                 )
                                             }
                                         }
@@ -276,22 +282,30 @@ fun AttractionCard(
                                                 containerColor = BluePrimary
                                             ),
                                             shape = RoundedCornerShape(8.dp),
-                                            modifier = Modifier.weight(1f)
+                                            modifier = Modifier.weight(1f),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp)
                                         ) {
-                                            Icon(
-                                                imageVector = if (isAudioPlaying) {
-                                                    Icons.Default.Pause
-                                                } else {
-                                                    Icons.Default.PlayArrow
-                                                },
-                                                contentDescription = if (isAudioPlaying) "Пауза" else "Воспроизвести",
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                text = if (isAudioPlaying) "Пауза" else "Воспроизвести",
-                                                style = MaterialTheme.typography.labelLarge
-                                            )
+                                            Row(
+                                                horizontalArrangement = Arrangement.Center,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (isAudioPlaying) {
+                                                        Icons.Default.Pause
+                                                    } else {
+                                                        Icons.Default.PlayArrow
+                                                    },
+                                                    contentDescription = if (isAudioPlaying) "Пауза" else "Воспроизвести",
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = if (isAudioPlaying) "Пауза" else "Воспроизвести",
+                                                    style = MaterialTheme.typography.labelLarge,
+                                                    maxLines = 1,
+                                                    softWrap = false
+                                                )
+                                            }
                                         }
                                     }
                                     

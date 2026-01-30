@@ -1,0 +1,131 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+
+' ===== Domain =====
+package "domain.model" {
+  class Route
+  class Attraction
+  class User
+
+  Route "1" o-- "*" Attraction : attractions
+}
+
+' ===== UI (ViewModel) =====
+package "ui.viewmodel" {
+  class MapViewModel
+  class RoutesViewModel
+  class RouteDetailsViewModel
+
+  class AuthViewModel
+  class ThemeViewModel
+  class LanguageViewModel
+  class FontSizeViewModel
+  class NotificationsViewModel
+
+  class MapUiState <<data>>
+}
+
+' ===== Data: Repository =====
+package "data.repository" {
+  class RouteRepository
+  class AuthRepository
+}
+
+' ===== Data: API =====
+package "data.api" {
+  interface RouteApi
+  interface AuthApi
+}
+
+' ===== Data: Local (Room + assets + preferences) =====
+package "data.database" {
+  class AppDatabase <<RoomDatabase>>
+}
+
+package "data.database.dao" {
+  interface RouteDao <<DAO>>
+  interface AttractionDao <<DAO>>
+}
+
+package "data.database.entity" {
+  class RouteEntity <<Entity>>
+  class AttractionEntity <<Entity>>
+  RouteEntity "1" <-- "*" AttractionEntity : FK routeId
+}
+
+package "data.local" {
+  class PreferencesManager <<DataStore>>
+  class RouteDataLoader
+}
+
+package "data.mapper" {
+  class RouteMapper <<utility>>
+}
+
+package "data.auth" {
+  class YandexAuthManager
+}
+
+' ===== Util / Service =====
+package "util" {
+  class LocationManager
+  class AudioPlayer
+  class LocationUtils <<utility>>
+  class StorageUrlHelper <<utility>>
+  class Constants <<utility>>
+}
+
+package "service" {
+  class YandexPushService
+}
+
+' ===== Relations: UI -> Data =====
+MapViewModel --> RouteRepository
+MapViewModel --> LocationManager
+MapViewModel --> AudioPlayer
+MapViewModel --> PreferencesManager
+MapViewModel ..> LocationUtils
+MapViewModel ..> StorageUrlHelper
+
+RoutesViewModel --> RouteRepository
+RouteDetailsViewModel --> RouteRepository
+
+ThemeViewModel --> PreferencesManager
+LanguageViewModel --> PreferencesManager
+FontSizeViewModel --> PreferencesManager
+NotificationsViewModel --> PreferencesManager
+
+AuthViewModel --> AuthRepository
+AuthViewModel --> YandexAuthManager
+
+' ===== Relations: Repository -> API/DB/Local =====
+RouteRepository --> RouteApi
+RouteRepository --> RouteDao
+RouteRepository --> AttractionDao
+RouteRepository --> RouteDataLoader
+RouteRepository ..> RouteMapper
+
+AuthRepository --> AuthApi
+AuthRepository --> PreferencesManager
+
+YandexAuthManager --> PreferencesManager
+YandexAuthManager ..> "OkHttpClient"
+
+' ===== Relations: Room =====
+AppDatabase o-- RouteDao
+AppDatabase o-- AttractionDao
+
+RouteDao --> RouteEntity
+AttractionDao --> AttractionEntity
+
+' ===== Mapping =====
+RouteMapper ..> RouteEntity
+RouteMapper ..> Route
+RouteMapper ..> AttractionEntity
+RouteMapper ..> Attraction
+
+' ===== Other =====
+YandexPushService ..> "NotificationManager"
+@enduml
+

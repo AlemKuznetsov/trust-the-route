@@ -15,6 +15,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -61,6 +64,8 @@ fun RouteDetailsScreen(
     val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
     val headerColor = if (isDarkTheme) DarkSurface else BluePrimary
     val headerTextColor = if (isDarkTheme) Blue400 else White
+    val density = LocalDensity.current
+    val fontSizeValue = with(density) { MaterialTheme.typography.bodyMedium.fontSize.toDp() }
     
     Column(
         modifier = Modifier
@@ -89,11 +94,16 @@ fun RouteDetailsScreen(
                 titleContentColor = headerTextColor,
                 navigationIconContentColor = headerTextColor
             ),
-            modifier = if (isDarkTheme) Modifier.border(
-                width = 1.dp,
-                color = DarkBorder,
-                shape = RoundedCornerShape(0.dp)
-            ) else Modifier
+            modifier = Modifier.drawBehind {
+                // Рисуем только нижнюю границу
+                val borderColor = if (isDarkTheme) DarkBorder else BorderLight
+                drawLine(
+                    color = borderColor,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
         )
 
         // Контент с прокруткой
@@ -125,8 +135,13 @@ fun RouteDetailsScreen(
                     elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.padding(
+                            start = fontSizeValue,
+                            top = 0.dp, // Убираем верхний отступ
+                            end = fontSizeValue,
+                            bottom = fontSizeValue
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(fontSizeValue * 0.5f)
                     ) {
                         Text(
                             text = "Описание маршрута",
@@ -155,8 +170,13 @@ fun RouteDetailsScreen(
                     elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.padding(
+                            start = fontSizeValue,
+                            top = 0.dp, // Убираем верхний отступ
+                            end = fontSizeValue,
+                            bottom = fontSizeValue
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(fontSizeValue * 0.5f)
                     ) {
                         Text(
                             text = "История маршрута",
@@ -185,8 +205,13 @@ fun RouteDetailsScreen(
                     elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.padding(
+                            start = fontSizeValue,
+                            top = 0.dp, // Убираем верхний отступ
+                            end = fontSizeValue,
+                            bottom = fontSizeValue
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(fontSizeValue * 0.5f)
                     ) {
                         Text(
                             text = "Описание достопримечательностей",
@@ -214,7 +239,12 @@ fun RouteDetailsScreen(
                 elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(
+                        start = 16.dp,
+                        top = 0.dp, // Убираем верхний отступ
+                        end = 16.dp,
+                        bottom = 16.dp
+                    ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
@@ -325,7 +355,12 @@ fun RouteDetailsScreen(
                     elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(
+                            start = 16.dp,
+                            top = 0.dp, // Убираем верхний отступ
+                            end = 16.dp,
+                            bottom = 16.dp
+                        ),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
@@ -364,8 +399,8 @@ fun RouteDetailsScreen(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = backgroundColor,
-            shadowElevation = if (!isDarkTheme) 8.dp else 0.dp,
-            border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(1.dp, DarkBorder) else null
+            shadowElevation = if (!isDarkTheme) 8.dp else 0.dp
+            // Убраны границы карточки
         ) {
             Row(
                 modifier = Modifier
@@ -389,15 +424,25 @@ fun RouteDetailsScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = BluePrimary
-                )
+                ),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Продолжить")
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Продолжить",
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
             }
             }
         }

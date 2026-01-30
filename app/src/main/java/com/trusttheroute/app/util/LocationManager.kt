@@ -15,6 +15,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -79,8 +81,56 @@ class LocationManager @Inject constructor(
             return null
         }
         return try {
-            fusedLocationClient.lastLocation.result
+            // Сначала пытаемся получить последнее известное местоположение
+            val lastLocation = fusedLocationClient.lastLocation.result
+            if (lastLocation != null && lastLocation.time > System.currentTimeMillis() - 60000) {
+                // Если местоположение свежее (менее минуты назад), используем его
+                android.util.Log.d("LocationManager", "Используется свежее последнее местоположение")
+                return lastLocation
+            }
+            
+            // Если последнее местоположение устарело или отсутствует, запрашиваем новое
+            android.util.Log.d("LocationManager", "Запрос нового местоположения...")
+            val locationRequest = LocationRequest.Builder(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                1000L // 1 секунда
+            )
+                .setMaxUpdateDelayMillis(5000L) // Максимальная задержка 5 секунд
+                .build()
+            
+            // Используем await для получения одного обновления местоположения
+            kotlinx.coroutines.withTimeout(10000L) { // Таймаут 10 секунд
+                kotlinx.coroutines.suspendCancellableCoroutine<Location?> { continuation ->
+                    val callback = object : LocationCallback() {
+                        override fun onLocationResult(result: LocationResult) {
+                            result.lastLocation?.let { location ->
+                                fusedLocationClient.removeLocationUpdates(this)
+                                continuation.resume(location) {}
+                            }
+                        }
+                    }
+                    
+                    fusedLocationClient.requestLocationUpdates(
+                        locationRequest,
+                        callback,
+                        context.mainLooper
+                    )
+                    
+                    continuation.invokeOnCancellation {
+                        fusedLocationClient.removeLocationUpdates(callback)
+                    }
+                }
+            }
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            android.util.Log.w("LocationManager", "Таймаут при получении местоположения")
+            // В случае таймаута возвращаем последнее известное местоположение
+            try {
+                fusedLocationClient.lastLocation.result
+            } catch (ex: Exception) {
+                null
+            }
         } catch (e: Exception) {
+            android.util.Log.e("LocationManager", "Ошибка при получении местоположения", e)
             null
         }
     }

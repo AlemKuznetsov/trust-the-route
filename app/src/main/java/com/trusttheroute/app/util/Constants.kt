@@ -21,4 +21,12 @@ object Constants {
     
     // Cache
     const val CACHE_SIZE = 50 * 1024 * 1024L // 50 MB
+    
+    // Yandex Object Storage
+    const val YANDEX_STORAGE_BASE_URL = "https://storage.yandexcloud.net/trust-the-route-media"
+    const val YANDEX_STORAGE_IMAGES_PATH = "images/routes"
+    const val YANDEX_STORAGE_AUDIO_PATH = "audio/routes"
+    
+    // Приоритет загрузки: сначала облако, потом локальные файлы
+    const val USE_CLOUD_STORAGE_FIRST = true
 }

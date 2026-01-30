@@ -4,7 +4,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -15,12 +18,18 @@ import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.map.CameraPosition
+import com.yandex.mapkit.map.IconStyle
 import com.yandex.mapkit.map.InputListener
 import com.yandex.mapkit.map.MapObject
 import com.yandex.mapkit.map.MapObjectTapListener
+import com.yandex.mapkit.map.PlacemarkMapObject
+import com.yandex.mapkit.map.PolylineMapObject
 import com.yandex.mapkit.mapview.MapView
+import com.yandex.runtime.image.ImageProvider
+import com.trusttheroute.app.R
 import com.trusttheroute.app.domain.model.Attraction
 import com.trusttheroute.app.domain.model.Route
+import android.graphics.PointF
 
 @Composable
 fun YandexMapView(
@@ -43,6 +52,12 @@ fun YandexMapView(
             map.isTiltGesturesEnabled = false
         }
     }
+    
+    // Состояние для управления маркерами отдельно
+    var attractionMarkersRef by remember { mutableStateOf<List<PlacemarkMapObject>>(emptyList()) }
+    var routePolylineRef by remember { mutableStateOf<PolylineMapObject?>(null) }
+    var locationMarkerRef by remember { mutableStateOf<PlacemarkMapObject?>(null) }
+    var hasCenteredOnRoute by remember { mutableStateOf(false) }
     
     // Отключаем жесты карты когда drawer открыт
     LaunchedEffect(isDrawerOpen) {
@@ -137,20 +152,53 @@ fun YandexMapView(
         }
     }
 
-    // Обновление карты при изменении данных
-    LaunchedEffect(route, attractions, currentLocation) {
-        updateMap(mapView, route, attractions, currentLocation)
+    // Обновление маршрута и достопримечательностей
+    LaunchedEffect(route, attractions) {
+        updateRouteAndAttractions(
+            mapView = mapView,
+            route = route,
+            attractions = attractions,
+            context = context,
+            attractionMarkersRef = { attractionMarkersRef },
+            setAttractionMarkersRef = { attractionMarkersRef = it },
+            routePolylineRef = { routePolylineRef },
+            setRoutePolylineRef = { routePolylineRef = it },
+            hasCenteredOnRoute = { hasCenteredOnRoute },
+            setHasCenteredOnRoute = { hasCenteredOnRoute = it }
+        )
     }
     
-    // Центрирование карты на текущем местоположении при изменении centerOnLocationTrigger
-    LaunchedEffect(centerOnLocationTrigger, currentLocation) {
-        if (centerOnLocationTrigger > 0 && currentLocation != null) {
+    // Обновление маркера местоположения отдельно
+    LaunchedEffect(currentLocation) {
+        locationMarkerRef = updateLocationMarker(
+            mapView = mapView,
+            currentLocation = currentLocation,
+            context = context,
+            existingMarker = locationMarkerRef
+        )
+    }
+    
+    // Центрирование карты на текущем местоположении ТОЛЬКО при изменении centerOnLocationTrigger
+    // НЕ зависим от currentLocation, чтобы избежать центрирования при каждом обновлении местоположения
+    // Сохраняем последний использованный trigger, чтобы не центрировать повторно с тем же значением
+    var lastCenteredTrigger by remember { mutableStateOf(0) }
+    
+    LaunchedEffect(centerOnLocationTrigger) {
+        // Центрируем только если trigger изменился и больше 0, и есть местоположение
+        if (centerOnLocationTrigger > 0 && centerOnLocationTrigger != lastCenteredTrigger && currentLocation != null) {
+            android.util.Log.d("YandexMapView", "Центрирование карты на местоположении: lat=${currentLocation.latitude}, lng=${currentLocation.longitude}, trigger=$centerOnLocationTrigger")
             val userPoint = Point(currentLocation.latitude, currentLocation.longitude)
             mapView.map.move(
                 CameraPosition(userPoint, 15f, 0f, 0f),
                 Animation(Animation.Type.SMOOTH, 0.5f),
                 null
             )
+            lastCenteredTrigger = centerOnLocationTrigger
+            android.util.Log.d("YandexMapView", "Карта центрирована успешно, lastCenteredTrigger=$lastCenteredTrigger")
+        } else if (centerOnLocationTrigger > 0 && centerOnLocationTrigger != lastCenteredTrigger && currentLocation == null) {
+            android.util.Log.w("YandexMapView", "Попытка центрирования карты, но местоположение не определено, trigger=$centerOnLocationTrigger")
+        } else if (centerOnLocationTrigger == lastCenteredTrigger) {
+            android.util.Log.d("YandexMapView", "Центрирование пропущено: trigger не изменился ($centerOnLocationTrigger == $lastCenteredTrigger)")
         }
     }
 
@@ -192,18 +240,41 @@ fun YandexMapView(
     }
 }
 
-private fun updateMap(
+private fun updateRouteAndAttractions(
     mapView: MapView,
     route: Route?,
     attractions: List<Attraction>,
-    currentLocation: android.location.Location?
+    context: android.content.Context,
+    attractionMarkersRef: () -> List<PlacemarkMapObject>,
+    setAttractionMarkersRef: (List<PlacemarkMapObject>) -> Unit,
+    routePolylineRef: () -> PolylineMapObject?,
+    setRoutePolylineRef: (PolylineMapObject?) -> Unit,
+    hasCenteredOnRoute: () -> Boolean,
+    setHasCenteredOnRoute: (Boolean) -> Unit
 ) {
     val mapObjects = mapView.map.mapObjects
 
-    // Очистка предыдущих объектов
-    mapObjects.clear()
+    // Remove old attraction markers
+    attractionMarkersRef().forEach { marker ->
+        try {
+            mapObjects.remove(marker)
+        } catch (e: Exception) {
+            android.util.Log.e("YandexMapView", "Ошибка при удалении старого маркера достопримечательности", e)
+        }
+    }
+    setAttractionMarkersRef(emptyList())
 
-    // Отображение маршрута (polyline)
+    // Remove old route polyline
+    routePolylineRef()?.let { polyline ->
+        try {
+            mapObjects.remove(polyline)
+        } catch (e: Exception) {
+            android.util.Log.e("YandexMapView", "Ошибка при удалении старого маршрута", e)
+        }
+    }
+    setRoutePolylineRef(null)
+
+    // Display route
     route?.let { r ->
         if (r.polyline.isNotEmpty()) {
             try {
@@ -211,60 +282,131 @@ private fun updateMap(
                 if (points.isNotEmpty()) {
                     val polyline = com.yandex.mapkit.geometry.Polyline(points)
                     val polylineMapObject = mapObjects.addPolyline(polyline)
-                    // Установка цвета и ширины линии маршрута
                     polylineMapObject.setStrokeColor(android.graphics.Color.parseColor("#2196F3"))
                     polylineMapObject.strokeWidth = 5f
+                    setRoutePolylineRef(polylineMapObject)
 
-                    // Установка камеры на маршрут только если нет текущего местоположения
-                    if (currentLocation == null) {
+                    // Center on route only once when route is first loaded
+                    if (!hasCenteredOnRoute()) {
                         val center = points[points.size / 2]
                         mapView.map.move(
                             CameraPosition(center, 13f, 0f, 0f),
                             Animation(Animation.Type.SMOOTH, 1f),
                             null
                         )
+                        setHasCenteredOnRoute(true)
+                        android.util.Log.d("YandexMapView", "Карта центрирована на маршруте: lat=${center.latitude}, lng=${center.longitude}")
                     }
                 }
             } catch (e: Exception) {
+                android.util.Log.e("YandexMapView", "Ошибка при отображении маршрута", e)
                 e.printStackTrace()
             }
         }
     }
 
-    // Отображение достопримечательностей
-    try {
+    // Display attractions
+    val newMarkers = mutableListOf<PlacemarkMapObject>()
         android.util.Log.d("YandexMapView", "Adding ${attractions.size} attractions to map")
+        if (attractions.isEmpty()) {
+            android.util.Log.w("YandexMapView", "Список достопримечательностей пуст")
+        }
         attractions.forEach { attraction ->
             try {
                 val point = Point(attraction.latitude, attraction.longitude)
                 val placemark = mapObjects.addPlacemark(point)
                 
-                // Можно добавить кастомную иконку
-                // placemark.setIcon(ImageProvider.fromResource(context, R.drawable.attraction_icon))
+            // Create Bitmap from vector drawable for better compatibility
+            val drawable = context.getDrawable(R.drawable.ic_attraction_marker)
+            if (drawable != null) {
+                val bitmap = android.graphics.Bitmap.createBitmap(
+                    (64 * context.resources.displayMetrics.density).toInt(),
+                    (64 * context.resources.displayMetrics.density).toInt(),
+                    android.graphics.Bitmap.Config.ARGB_8888
+                )
+                val canvas = android.graphics.Canvas(bitmap)
+                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                drawable.draw(canvas)
+                val iconProvider = ImageProvider.fromBitmap(bitmap)
+                placemark.setIcon(iconProvider)
+
+                val iconStyle = IconStyle()
+                iconStyle.scale = 0.63f // Adjusted scale
+                iconStyle.anchor = PointF(0.5f, 1.0f) // Anchor at bottom center
+                placemark.setIconStyle(iconStyle)
+
+                android.util.Log.d("YandexMapView", "Золотистый маркер установлен для: ${attraction.name}, placemark visible: ${placemark.isVisible}")
+            } else {
+                android.util.Log.e("YandexMapView", "Drawable for ic_attraction_marker not found")
+                }
                 
-                // Сохраняем данные достопримечательности в userData для обработки кликов
                 placemark.userData = attraction
-                android.util.Log.d("YandexMapView", "Added placemark for: ${attraction.name}, userData set: ${placemark.userData != null}")
+            android.util.Log.d("YandexMapView", "Added placemark for: ${attraction.name}, userData set: ${placemark.userData != null}, placemark: $placemark")
+            newMarkers.add(placemark)
             } catch (e: Exception) {
                 android.util.Log.e("YandexMapView", "Error adding placemark for ${attraction.name}", e)
+                e.printStackTrace()
             }
         }
+    android.util.Log.d("YandexMapView", "Всего добавлено ${newMarkers.size} маркеров достопримечательностей")
+    setAttractionMarkersRef(newMarkers)
+    android.util.Log.d("YandexMapView", "Проверка: маркеры сохранены в attractionMarkersRef, размер: ${attractionMarkersRef().size}")
+    android.util.Log.d("YandexMapView", "attractionMarkersRef обновлен, новый размер: ${attractionMarkersRef().size}")
+}
+
+private fun updateLocationMarker(
+    mapView: MapView,
+    currentLocation: android.location.Location?,
+    context: android.content.Context,
+    existingMarker: PlacemarkMapObject?
+): PlacemarkMapObject? {
+    val mapObjects = mapView.map.mapObjects
+
+    // Remove old marker if it exists
+    existingMarker?.let {
+        try {
+            mapObjects.remove(it)
+            android.util.Log.d("YandexMapView", "Старый маркер местоположения удален")
     } catch (e: Exception) {
-        android.util.Log.e("YandexMapView", "Error adding attractions to map", e)
+            android.util.Log.e("YandexMapView", "Ошибка при удалении старого маркера местоположения", e)
+        }
     }
 
-    // Отображение текущего местоположения пользователя
-    currentLocation?.let { location ->
-        val userPoint = Point(location.latitude, location.longitude)
-        mapObjects.addPlacemark(userPoint)
-        
-        // Перемещение камеры к пользователю только если нет маршрута (при первой загрузке)
-        if (route == null) {
-            mapView.map.move(
-                CameraPosition(userPoint, 15f, 0f, 0f),
-                Animation(Animation.Type.SMOOTH, 0.5f),
-                null
-            )
+    // Add new marker if location is available
+    return currentLocation?.let { location ->
+        try {
+            val userPoint = Point(location.latitude, location.longitude)
+            val userPlacemark = mapObjects.addPlacemark(userPoint)
+            
+            // Create Bitmap from vector drawable for better compatibility
+            val drawable = context.getDrawable(R.drawable.ic_user_location_marker)
+            if (drawable != null) {
+                val bitmap = android.graphics.Bitmap.createBitmap(
+                    (64 * context.resources.displayMetrics.density).toInt(),
+                    (64 * context.resources.displayMetrics.density).toInt(),
+                    android.graphics.Bitmap.Config.ARGB_8888
+                )
+                val canvas = android.graphics.Canvas(bitmap)
+                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                drawable.draw(canvas)
+                val iconProvider = ImageProvider.fromBitmap(bitmap)
+                userPlacemark.setIcon(iconProvider)
+                
+                val iconStyle = IconStyle()
+                iconStyle.scale = 0.63f // Same scale as attraction markers
+                iconStyle.anchor = PointF(0.5f, 0.5f) // Center anchor for user location
+                userPlacemark.setIconStyle(iconStyle)
+                
+                android.util.Log.d("YandexMapView", "Маркер местоположения установлен успешно с кастомной иконкой (белый круг с красным кругом внутри)")
+            } else {
+                android.util.Log.e("YandexMapView", "Drawable for ic_user_location_marker not found")
+            }
+            
+            userPlacemark
+        } catch (e: Exception) {
+            android.util.Log.e("YandexMapView", "Ошибка при добавлении маркера местоположения", e)
+            e.printStackTrace()
+            null
         }
     }
 }
