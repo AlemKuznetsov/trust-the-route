@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.trusttheroute.app.data.api.AuthApi
 import com.trusttheroute.app.data.api.NotificationApi
 import com.trusttheroute.app.data.api.RouteApi
+import com.trusttheroute.app.util.AuthInterceptor
 import com.trusttheroute.app.util.Constants
 import dagger.Module
 import dagger.Provides
@@ -31,7 +32,10 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
+    fun provideOkHttpClient(
+        @ApplicationContext context: Context,
+        authInterceptor: AuthInterceptor
+    ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             // В DEBUG режиме логируем все, в продакшене только базовую информацию
             val isDebug = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
@@ -48,6 +52,7 @@ object NetworkModule {
 
         return OkHttpClient.Builder()
             .cache(cache) // Добавляем кэш
+            .addInterceptor(authInterceptor) // Добавляем interceptor для авторизации
             .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)

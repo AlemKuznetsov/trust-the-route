@@ -31,6 +31,10 @@ import com.trusttheroute.app.domain.model.Attraction
 import com.trusttheroute.app.domain.model.Route
 import android.graphics.PointF
 
+// Кэш для bitmap маркера местоположения (создается один раз)
+private var cachedLocationMarkerIcon: ImageProvider? = null
+private var cachedLocationMarkerDensity: Float = 0f
+
 @Composable
 fun YandexMapView(
     route: Route?,
@@ -378,18 +382,37 @@ private fun updateLocationMarker(
             val userPoint = Point(location.latitude, location.longitude)
             val userPlacemark = mapObjects.addPlacemark(userPoint)
             
-            // Create Bitmap from vector drawable for better compatibility
-            val drawable = context.getDrawable(R.drawable.ic_user_location_marker)
-            if (drawable != null) {
-                val bitmap = android.graphics.Bitmap.createBitmap(
-                    (64 * context.resources.displayMetrics.density).toInt(),
-                    (64 * context.resources.displayMetrics.density).toInt(),
-                    android.graphics.Bitmap.Config.ARGB_8888
-                )
-                val canvas = android.graphics.Canvas(bitmap)
-                drawable.setBounds(0, 0, canvas.width, canvas.height)
-                drawable.draw(canvas)
-                val iconProvider = ImageProvider.fromBitmap(bitmap)
+            // Используем кэшированный bitmap для быстрого отображения
+            val density = context.resources.displayMetrics.density
+            val iconProvider = if (cachedLocationMarkerIcon != null && cachedLocationMarkerDensity == density) {
+                // Используем кэшированный iconProvider
+                android.util.Log.d("YandexMapView", "Используется кэшированный bitmap маркера местоположения")
+                cachedLocationMarkerIcon!!
+            } else {
+                // Создаем новый bitmap и кэшируем его
+                val drawable = context.getDrawable(R.drawable.ic_user_location_marker)
+                if (drawable != null) {
+                    val bitmap = android.graphics.Bitmap.createBitmap(
+                        (64 * density).toInt(),
+                        (64 * density).toInt(),
+                        android.graphics.Bitmap.Config.ARGB_8888
+                    )
+                    val canvas = android.graphics.Canvas(bitmap)
+                    drawable.setBounds(0, 0, canvas.width, canvas.height)
+                    drawable.draw(canvas)
+                    val provider = ImageProvider.fromBitmap(bitmap)
+                    // Кэшируем для следующего использования
+                    cachedLocationMarkerIcon = provider
+                    cachedLocationMarkerDensity = density
+                    android.util.Log.d("YandexMapView", "Создан и закэширован bitmap маркера местоположения")
+                    provider
+                } else {
+                    android.util.Log.e("YandexMapView", "Drawable for ic_user_location_marker not found")
+                    null
+                }
+            }
+            
+            if (iconProvider != null) {
                 userPlacemark.setIcon(iconProvider)
                 
                 val iconStyle = IconStyle()
@@ -397,9 +420,7 @@ private fun updateLocationMarker(
                 iconStyle.anchor = PointF(0.5f, 0.5f) // Center anchor for user location
                 userPlacemark.setIconStyle(iconStyle)
                 
-                android.util.Log.d("YandexMapView", "Маркер местоположения установлен успешно с кастомной иконкой (белый круг с красным кругом внутри)")
-            } else {
-                android.util.Log.e("YandexMapView", "Drawable for ic_user_location_marker not found")
+                android.util.Log.d("YandexMapView", "Маркер местоположения установлен успешно")
             }
             
             userPlacemark

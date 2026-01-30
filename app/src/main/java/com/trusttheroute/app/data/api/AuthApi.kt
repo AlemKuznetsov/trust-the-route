@@ -20,6 +20,15 @@ data class ResetPasswordRequest(
     val email: String
 )
 
+data class UpdateProfileRequest(
+    val name: String
+)
+
+data class ChangePasswordRequest(
+    val oldPassword: String,
+    val newPassword: String
+)
+
 data class AuthResponse(
     val user: User,
     val token: String
@@ -38,4 +47,22 @@ interface AuthApi {
 
     @POST("auth/reset-password")
     suspend fun resetPassword(@Body request: ResetPasswordRequest): Response<MessageResponse>
+
+    @retrofit2.http.PUT("auth/profile")
+    suspend fun updateProfile(@Body request: UpdateProfileRequest): Response<AuthResponse>
+
+    @retrofit2.http.PUT("auth/password")
+    suspend fun changePassword(@Body request: ChangePasswordRequest): Response<MessageResponse>
+
+    @retrofit2.http.DELETE("auth/account")
+    suspend fun deleteAccount(@retrofit2.http.Query("confirmation") confirmationText: String): Response<MessageResponse>
+
+    @POST("auth/yandex")
+    suspend fun authWithYandex(@Body request: YandexAuthRequest): Response<AuthResponse>
 }
+
+data class YandexAuthRequest(
+    val yandexToken: String,
+    val email: String,
+    val name: String
+)

@@ -1,8 +1,30 @@
+#!/bin/bash
+# Полное восстановление файла AuthRoutes.kt на сервере
+
+cd ~/trust-the-route-backend/backend
+
+echo "=========================================="
+echo "Восстановление AuthRoutes.kt"
+echo "=========================================="
+echo ""
+
+# Создаем резервную копию
+cp src/main/kotlin/com/trusttheroute/backend/routes/auth/AuthRoutes.kt \
+   src/main/kotlin/com/trusttheroute/backend/routes/auth/AuthRoutes.kt.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null
+
+echo "1. Проверка текущего файла:"
+echo "----------------------------------------"
+head -15 src/main/kotlin/com/trusttheroute/backend/routes/auth/AuthRoutes.kt
+echo ""
+
+echo "2. Восстановление правильных импортов..."
+echo "----------------------------------------"
+
+# Создаем правильный файл с исправленными импортами
+cat > /tmp/AuthRoutes_fixed.kt << 'AUTHRoutes_EOF'
 package com.trusttheroute.backend.routes.auth
 
 import com.trusttheroute.backend.models.*
-import com.trusttheroute.backend.models.ErrorResponse
-import com.trusttheroute.backend.models.MessageResponse
 import com.trusttheroute.backend.models.YandexAuthRequest
 import com.trusttheroute.backend.repositories.UserRepository
 import com.trusttheroute.backend.utils.JwtUtils
@@ -38,7 +60,7 @@ fun Application.configureAuthRoutes() {
                     if (request.email.isBlank() || request.password.isBlank() || request.name.isBlank()) {
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            ErrorResponse("Email, password, and name are required")
+                            mapOf("error" to "Email, password, and name are required")
                         )
                         return@post
                     }
@@ -47,7 +69,7 @@ fun Application.configureAuthRoutes() {
                     if (userRepository.userExists(request.email)) {
                         call.respond(
                             HttpStatusCode.Conflict,
-                            ErrorResponse("User with this email already exists")
+                            mapOf("error" to "User with this email already exists")
                         )
                         return@post
                     }
@@ -74,13 +96,13 @@ fun Application.configureAuthRoutes() {
                     } else {
                         call.respond(
                             HttpStatusCode.InternalServerError,
-                            ErrorResponse("Failed to create user")
+                            mapOf("error" to "Failed to create user")
                         )
                     }
                 } catch (e: Exception) {
                     call.respond(
                         HttpStatusCode.InternalServerError,
-                        ErrorResponse(e.message ?: "Unknown error")
+                        mapOf("error" to e.message ?: "Unknown error")
                     )
                 }
             }
@@ -93,7 +115,7 @@ fun Application.configureAuthRoutes() {
                     if (request.email.isBlank() || request.password.isBlank()) {
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            ErrorResponse("Email and password are required")
+                            mapOf("error" to "Email and password are required")
                         )
                         return@post
                     }
@@ -116,13 +138,13 @@ fun Application.configureAuthRoutes() {
                     } else {
                         call.respond(
                             HttpStatusCode.Unauthorized,
-                            ErrorResponse("Invalid email or password")
+                            mapOf("error" to "Invalid email or password")
                         )
                     }
                 } catch (e: Exception) {
                     call.respond(
                         HttpStatusCode.InternalServerError,
-                        ErrorResponse(e.message ?: "Unknown error")
+                        mapOf("error" to e.message ?: "Unknown error")
                     )
                 }
             }
@@ -135,7 +157,7 @@ fun Application.configureAuthRoutes() {
                     if (request.email.isBlank()) {
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            ErrorResponse("Email is required")
+                            mapOf("error" to "Email is required")
                         )
                         return@post
                     }
@@ -143,17 +165,17 @@ fun Application.configureAuthRoutes() {
                     // Проверить, существует ли пользователь
                     if (!userRepository.userExists(request.email)) {
                         // Для безопасности не сообщаем, что пользователь не существует
-                        call.respond(HttpStatusCode.OK, MessageResponse("If the email exists, a password reset link has been sent"))
+                        call.respond(HttpStatusCode.OK, mapOf("message" to "If the email exists, a password reset link has been sent"))
                         return@post
                     }
                     
                     // TODO: Реализовать отправку email с ссылкой для сброса пароля
                     // Пока просто возвращаем успешный ответ
-                    call.respond(HttpStatusCode.OK, MessageResponse("If the email exists, a password reset link has been sent"))
+                    call.respond(HttpStatusCode.OK, mapOf("message" to "If the email exists, a password reset link has been sent"))
                 } catch (e: Exception) {
                     call.respond(
                         HttpStatusCode.InternalServerError,
-                        ErrorResponse(e.message ?: "Unknown error")
+                        mapOf("error" to e.message ?: "Unknown error")
                     )
                 }
             }
@@ -166,7 +188,7 @@ fun Application.configureAuthRoutes() {
                     if (request.yandexToken.isBlank() || request.email.isBlank() || request.name.isBlank()) {
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            ErrorResponse("Yandex token, email, and name are required")
+                            mapOf("error" to "Yandex token, email, and name are required")
                         )
                         return@post
                     }
@@ -194,13 +216,13 @@ fun Application.configureAuthRoutes() {
                     } else {
                         call.respond(
                             HttpStatusCode.InternalServerError,
-                            ErrorResponse("Failed to create or find user")
+                            mapOf("error" to "Failed to create or find user")
                         )
                     }
                 } catch (e: Exception) {
                     call.respond(
                         HttpStatusCode.InternalServerError,
-                        ErrorResponse(e.message ?: "Unknown error")
+                        mapOf("error" to e.message ?: "Unknown error")
                     )
                 }
             }
@@ -211,7 +233,7 @@ fun Application.configureAuthRoutes() {
                     if (userId == null) {
                         call.respond(
                             HttpStatusCode.Unauthorized,
-                            ErrorResponse("Authentication required")
+                            mapOf("error" to "Authentication required")
                         )
                         return@put
                     }
@@ -221,7 +243,7 @@ fun Application.configureAuthRoutes() {
                     if (request.name.isBlank()) {
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            ErrorResponse("Name is required")
+                            mapOf("error" to "Name is required")
                         )
                         return@put
                     }
@@ -239,13 +261,13 @@ fun Application.configureAuthRoutes() {
                     } else {
                         call.respond(
                             HttpStatusCode.InternalServerError,
-                            ErrorResponse("Failed to update profile")
+                            mapOf("error" to "Failed to update profile")
                         )
                     }
                 } catch (e: Exception) {
                     call.respond(
                         HttpStatusCode.InternalServerError,
-                        ErrorResponse(e.message ?: "Unknown error")
+                        mapOf("error" to e.message ?: "Unknown error")
                     )
                 }
             }
@@ -256,7 +278,7 @@ fun Application.configureAuthRoutes() {
                     if (userId == null) {
                         call.respond(
                             HttpStatusCode.Unauthorized,
-                            ErrorResponse("Authentication required")
+                            mapOf("error" to "Authentication required")
                         )
                         return@put
                     }
@@ -266,7 +288,7 @@ fun Application.configureAuthRoutes() {
                     if (request.oldPassword.isBlank() || request.newPassword.isBlank()) {
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            ErrorResponse("Old password and new password are required")
+                            mapOf("error" to "Old password and new password are required")
                         )
                         return@put
                     }
@@ -274,7 +296,7 @@ fun Application.configureAuthRoutes() {
                     if (request.newPassword.length < 6) {
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            ErrorResponse("New password must be at least 6 characters")
+                            mapOf("error" to "New password must be at least 6 characters")
                         )
                         return@put
                     }
@@ -283,18 +305,18 @@ fun Application.configureAuthRoutes() {
                     if (success) {
                         call.respond(
                             HttpStatusCode.OK,
-                            MessageResponse("Password changed successfully")
+                            mapOf("message" to "Password changed successfully")
                         )
                     } else {
                         call.respond(
                             HttpStatusCode.Unauthorized,
-                            ErrorResponse("Invalid old password")
+                            mapOf("error" to "Invalid old password")
                         )
                     }
                 } catch (e: Exception) {
                     call.respond(
                         HttpStatusCode.InternalServerError,
-                        ErrorResponse(e.message ?: "Unknown error")
+                        mapOf("error" to e.message ?: "Unknown error")
                     )
                 }
             }
@@ -305,7 +327,7 @@ fun Application.configureAuthRoutes() {
                     if (userId == null) {
                         call.respond(
                             HttpStatusCode.Unauthorized,
-                            ErrorResponse("Authentication required")
+                            mapOf("error" to "Authentication required")
                         )
                         return@delete
                     }
@@ -316,7 +338,7 @@ fun Application.configureAuthRoutes() {
                     if (confirmationText != "УДАЛИТЬ") {
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            ErrorResponse("Invalid confirmation text")
+                            mapOf("error" to "Invalid confirmation text")
                         )
                         return@delete
                     }
@@ -325,21 +347,44 @@ fun Application.configureAuthRoutes() {
                     if (success) {
                         call.respond(
                             HttpStatusCode.OK,
-                            MessageResponse("Account deleted successfully")
+                            mapOf("message" to "Account deleted successfully")
                         )
                     } else {
                         call.respond(
                             HttpStatusCode.InternalServerError,
-                            ErrorResponse("Failed to delete account")
+                            mapOf("error" to "Failed to delete account")
                         )
                     }
                 } catch (e: Exception) {
                     call.respond(
                         HttpStatusCode.InternalServerError,
-                        ErrorResponse(e.message ?: "Unknown error")
+                        mapOf("error" to e.message ?: "Unknown error")
                     )
                 }
             }
         }
     }
 }
+AUTHRoutes_EOF
+
+# Заменяем файл
+mv /tmp/AuthRoutes_fixed.kt src/main/kotlin/com/trusttheroute/backend/routes/auth/AuthRoutes.kt
+
+echo "✅ Файл восстановлен"
+echo ""
+echo "3. Проверка импортов:"
+echo "----------------------------------------"
+head -15 src/main/kotlin/com/trusttheroute/backend/routes/auth/AuthRoutes.kt
+echo ""
+
+echo "4. Компиляция:"
+echo "----------------------------------------"
+./gradlew compileKotlin --no-daemon 2>&1 | grep -E "error:|BUILD" | head -10
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Компиляция успешна!"
+else
+    echo ""
+    echo "❌ Ошибки компиляции остались"
+fi

@@ -1,182 +1,92 @@
 #!/bin/bash
-# Исправление дубликатов в AuthRoutes.kt
+# Удаление дублирующихся определений ErrorResponse и MessageResponse из User.kt
 
 cd ~/trust-the-route-backend/backend
 
-echo "=== Исправление дубликатов ==="
+echo "=== Исправление дубликатов в User.kt ==="
 echo ""
 
-# Проверяем файл
-echo "Проверяем текущий файл..."
-grep -n "ErrorResponse\|MessageResponse" src/main/kotlin/com/trusttheroute/backend/routes/auth/AuthRoutes.kt
-
-echo ""
-echo "Пересоздаем файл без дубликатов..."
-
-# Пересоздаем файл полностью
-cat > src/main/kotlin/com/trusttheroute/backend/routes/auth/AuthRoutes.kt << 'ROUTESEOF'
-package com.trusttheroute.backend.routes.auth
-
-import com.trusttheroute.backend.models.*
-import com.trusttheroute.backend.repositories.UserRepository
-import com.trusttheroute.backend.utils.JwtUtils
-import io.ktor.server.application.*
-import io.ktor.http.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import kotlinx.serialization.Serializable
-
-fun Application.configureAuthRoutes() {
-    val userRepository = UserRepository()
+# Проверяем, есть ли дубликаты
+if grep -q "data class ErrorResponse" src/main/kotlin/com/trusttheroute/backend/models/User.kt; then
+    echo "⚠️  Найдены дубликаты в User.kt, удаляем..."
     
-    routing {
-        route("/api/v1/auth") {
-            post("/register") {
-                try {
-                    val request = call.receive<RegisterRequest>()
-                    
-                    if (request.email.isBlank() || request.password.isBlank() || request.name.isBlank()) {
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            ErrorResponse("Email, password, and name are required")
-                        )
-                        return@post
-                    }
-                    
-                    if (userRepository.userExists(request.email)) {
-                        call.respond(
-                            HttpStatusCode.Conflict,
-                            ErrorResponse("User with this email already exists")
-                        )
-                        return@post
-                    }
-                    
-                    val user = userRepository.createUser(
-                        email = request.email,
-                        password = request.password,
-                        name = request.name
-                    )
-                    
-                    if (user != null) {
-                        val token = JwtUtils.generateToken(user.id, user.email)
-                        call.respond(
-                            HttpStatusCode.Created,
-                            AuthResponse(
-                                user = user.copy(token = token),
-                                token = token
-                            )
-                        )
-                    } else {
-                        call.respond(
-                            HttpStatusCode.InternalServerError,
-                            ErrorResponse("Failed to create user")
-                        )
-                    }
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ErrorResponse(e.message ?: "Unknown error")
-                    )
-                }
+    # Создаем резервную копию
+    cp src/main/kotlin/com/trusttheroute/backend/models/User.kt src/main/kotlin/com/trusttheroute/backend/models/User.kt.backup
+    
+    # Удаляем строки с ErrorResponse и MessageResponse из User.kt
+    # Используем sed для удаления строк, начиная с "data class ErrorResponse" до конца файла
+    # Но сначала найдем, где заканчивается AuthResponse
+    awk '
+    /^@Serializable$/ && found_auth == 0 {
+        print
+        getline
+        if ($0 ~ /^data class AuthResponse/) {
+            found_auth = 1
+            print
+            getline
+            print
+            getline
+            print
+            # После закрывающей скобки AuthResponse - это конец файла
+            if ($0 ~ /^\)$/) {
+                print
+                exit
             }
-            
-            post("/login") {
-                try {
-                    val request = call.receive<LoginRequest>()
-                    
-                    if (request.email.isBlank() || request.password.isBlank()) {
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            ErrorResponse("Email and password are required")
-                        )
-                        return@post
-                    }
-                    
-                    val user = userRepository.verifyPassword(request.email, request.password)
-                    
-                    if (user != null) {
-                        val token = JwtUtils.generateToken(user.id, user.email)
-                        call.respond(
-                            HttpStatusCode.OK,
-                            AuthResponse(
-                                user = user.copy(token = token),
-                                token = token
-                            )
-                        )
-                    } else {
-                        call.respond(
-                            HttpStatusCode.Unauthorized,
-                            ErrorResponse("Invalid email or password")
-                        )
-                    }
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ErrorResponse(e.message ?: "Unknown error")
-                    )
-                }
-            }
-            
-            post("/reset-password") {
-                try {
-                    val request = call.receive<ResetPasswordRequest>()
-                    
-                    if (request.email.isBlank()) {
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            ErrorResponse("Email is required")
-                        )
-                        return@post
-                    }
-                    
-                    if (!userRepository.userExists(request.email)) {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MessageResponse("If the email exists, a password reset link has been sent")
-                        )
-                        return@post
-                    }
-                    
-                    call.respond(
-                        HttpStatusCode.OK,
-                        MessageResponse("If the email exists, a password reset link has been sent")
-                    )
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ErrorResponse(e.message ?: "Unknown error")
-                    )
-                }
-            }
+        } else {
+            print
         }
+        next
     }
-}
-
-@Serializable
-data class ErrorResponse(val error: String)
-
-@Serializable
-data class MessageResponse(val message: String)
-ROUTESEOF
-
-echo "✅ Файл пересоздан"
-echo ""
-echo "Пересобираем..."
-./gradlew clean build
-
-if [ $? -eq 0 ]; then
+    found_auth == 1 && /^\)$/ {
+        print
+        exit
+    }
+    !/^data class (ErrorResponse|MessageResponse)/ && !/^@Serializable$/ || found_auth == 0 {
+        print
+    }
+    ' src/main/kotlin/com/trusttheroute/backend/models/User.kt.backup > src/main/kotlin/com/trusttheroute/backend/models/User.kt
+    
+    echo "✅ Дубликаты удалены"
     echo ""
-    echo "✅ Сборка успешна!"
+    echo "Проверяем файл User.kt:"
+    tail -10 src/main/kotlin/com/trusttheroute/backend/models/User.kt
     echo ""
-    echo "Перезапустите приложение:"
-    echo "  pkill -f 'gradlew run'"
-    echo "  sleep 2"
-    echo "  source .env"
-    echo "  nohup ./gradlew run > app.log 2>&1 &"
-    echo "  sleep 5"
-    echo "  tail -20 app.log"
+    
 else
+    echo "✅ Дубликатов не найдено в User.kt"
+fi
+
+# Проверяем, что ApiResponses.kt существует и содержит определения
+if [ -f "src/main/kotlin/com/trusttheroute/backend/models/ApiResponses.kt" ]; then
+    echo "✅ ApiResponses.kt найден"
     echo ""
-    echo "❌ Ошибка сборки. Проверьте вывод выше."
+    echo "Содержимое ApiResponses.kt:"
+    cat src/main/kotlin/com/trusttheroute/backend/models/ApiResponses.kt
+    echo ""
+else
+    echo "❌ ApiResponses.kt не найден! Нужно загрузить файл."
+    exit 1
+fi
+
+echo "=== Проверка на дубликаты ==="
+echo ""
+
+# Проверяем, сколько раз определены классы
+error_count=$(grep -r "data class ErrorResponse" src/main/kotlin/com/trusttheroute/backend/models/ | wc -l)
+message_count=$(grep -r "data class MessageResponse" src/main/kotlin/com/trusttheroute/backend/models/ | wc -l)
+
+if [ "$error_count" -eq 1 ] && [ "$message_count" -eq 1 ]; then
+    echo "✅ ErrorResponse определен 1 раз"
+    echo "✅ MessageResponse определен 1 раз"
+    echo ""
+    echo "=== Готово к сборке ==="
+else
+    echo "❌ Найдены дубликаты!"
+    echo "ErrorResponse определен $error_count раз(а)"
+    echo "MessageResponse определен $message_count раз(а)"
+    echo ""
+    echo "Файлы с определениями:"
+    grep -r "data class ErrorResponse" src/main/kotlin/com/trusttheroute/backend/models/ || true
+    grep -r "data class MessageResponse" src/main/kotlin/com/trusttheroute/backend/models/ || true
+    exit 1
 fi

@@ -20,6 +20,10 @@ import com.trusttheroute.app.ui.screens.settings.ThemeScreen
 import com.trusttheroute.app.ui.screens.settings.NotificationsScreen
 import com.trusttheroute.app.ui.screens.settings.FontSizeScreen
 import com.trusttheroute.app.ui.screens.settings.AppInfoScreen
+import com.trusttheroute.app.ui.screens.settings.AccountSettingsScreen
+import com.trusttheroute.app.ui.screens.settings.UpdateProfileScreen
+import com.trusttheroute.app.ui.screens.settings.ChangePasswordScreen
+import com.trusttheroute.app.ui.screens.settings.DeleteAccountScreen
 
 sealed class Screen(val route: String) {
     object MainMenu : Screen("main_menu")
@@ -40,6 +44,10 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object ResetPassword : Screen("reset_password")
+    object AccountSettings : Screen("account_settings")
+    object UpdateProfile : Screen("update_profile")
+    object ChangePassword : Screen("change_password")
+    object DeleteAccount : Screen("delete_account")
 }
 
 @Composable
@@ -112,7 +120,7 @@ fun AppNavHost(
                 onNotificationsClick = { navController.navigate(Screen.Notifications.route) },
                 onFontSizeClick = { navController.navigate(Screen.FontSize.route) },
                 onPrivacyClick = { /* TODO: Navigate to privacy settings */ },
-                onAccountClick = { /* TODO: Navigate to account settings */ },
+                onAccountClick = { navController.navigate(Screen.AccountSettings.route) },
                 onAppInfoClick = { navController.navigate(Screen.AppInfo.route) },
                 onAboutClick = { navController.navigate(Screen.About.route) }
             )
@@ -172,6 +180,35 @@ fun AppNavHost(
         composable(Screen.ResetPassword.route) {
             ResetPasswordScreen(
                 onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.AccountSettings.route) {
+            AccountSettingsScreen(
+                onBackClick = { navController.popBackStack() },
+                onUpdateProfileClick = { navController.navigate(Screen.UpdateProfile.route) },
+                onChangePasswordClick = { navController.navigate(Screen.ChangePassword.route) },
+                onLogoutClick = { navController.navigate(Screen.Login.route) { popUpTo(0) } },
+                onDeleteAccountClick = { navController.navigate(Screen.DeleteAccount.route) }
+            )
+        }
+
+        composable(Screen.UpdateProfile.route) {
+            UpdateProfileScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.ChangePassword.route) {
+            ChangePasswordScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.DeleteAccount.route) {
+            DeleteAccountScreen(
+                onBackClick = { navController.popBackStack() },
+                onAccountDeleted = { navController.navigate(Screen.Login.route) { popUpTo(0) } }
             )
         }
     }

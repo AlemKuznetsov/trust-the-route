@@ -34,7 +34,8 @@ import javax.inject.Singleton
 class YandexAuthManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val preferencesManager: PreferencesManager,
-    private val okHttpClient: OkHttpClient
+    private val okHttpClient: OkHttpClient,
+    private val authApi: com.trusttheroute.app.data.api.AuthApi
 ) {
     companion object {
         private const val TAG = "YandexAuthManager"
@@ -79,6 +80,9 @@ class YandexAuthManager @Inject constructor(
         val savedState = preferencesManager.getOAuthState()
         Log.d(TAG, "State сохранен: ${savedState == state}, сохраненный: $savedState")
         
+        // Добавляем timestamp для уникальности URL и предотвращения кэширования
+        val timestamp = System.currentTimeMillis()
+        
         val authUrl = Uri.parse(YANDEX_AUTH_URL)
             .buildUpon()
             .appendQueryParameter("response_type", "code")
@@ -87,6 +91,10 @@ class YandexAuthManager @Inject constructor(
             .appendQueryParameter("scope", SCOPES)
             .appendQueryParameter("state", state)
             .appendQueryParameter("lang", "ru") // Русский язык для интерфейса Yandex
+            .appendQueryParameter("prompt", "select_account") // Заставляет пользователя выбрать аккаунт заново (OAuth 2.0 стандарт)
+            // Примечание: force_confirm может не поддерживаться Yandex OAuth, но пробуем для совместимости
+            .appendQueryParameter("force_confirm", "1") // Принудительно показывает экран выбора аккаунта
+            .appendQueryParameter("_", timestamp.toString()) // Уникальный параметр для предотвращения кэширования URL браузером
             .build()
             .toString()
         
@@ -142,14 +150,19 @@ class YandexAuthManager @Inject constructor(
         
         try {
             Log.d(TAG, "Попытка открыть CustomTabs с URL: $authUrl")
+            
+            // Создаем CustomTabsIntent с дополнительными настройками
             val customTabsIntent = CustomTabsIntent.Builder()
                 .setShowTitle(true)
+                // Примечание: setShareState недоступен в версии 1.7.0 библиотеки browser
+                // Принудительный выбор аккаунта обеспечивается через параметры URL (prompt=select_account, force_confirm=1)
                 .build()
             
             // Запускаем на главном потоке, так как это UI операция
             kotlinx.coroutines.withContext(Dispatchers.Main) {
                 val uri = Uri.parse(authUrl)
                 Log.d(TAG, "Открытие CustomTabs с URI: $uri")
+                Log.d(TAG, "Параметры для принудительного выбора аккаунта: prompt=select_account, force_confirm=1")
                 
                 // Проверяем, что есть приложение для обработки этого URL
                 val packageManager = activity.packageManager
@@ -264,7 +277,8 @@ class YandexAuthManager @Inject constructor(
                     name = "${userInfo.optString("first_name", "")} ${userInfo.optString("last_name", "")}".trim()
                         .ifEmpty { userInfo.optString("display_name", "") }
                         .ifEmpty { userInfo.getString("login") },
-                    token = accessToken
+                    token = accessToken,
+                    authMethod = "yandex"
                 )
             } catch (e: Exception) {
                 Log.e(TAG, "Ошибка при создании объекта User", e)
@@ -274,15 +288,29 @@ class YandexAuthManager @Inject constructor(
             }
             Log.d(TAG, "Пользователь создан: id=${user.id}, email=${user.email}, name=${user.name}")
 
-            // Сохраняем пользователя и токен
-            Log.d(TAG, "Сохранение токена и данных пользователя")
-            preferencesManager.saveToken(accessToken)
-            preferencesManager.saveUser(user)
-            preferencesManager.clearOAuthState()
-            Log.d(TAG, "Данные сохранены успешно")
-
-            Log.d(TAG, "Авторизация завершена успешно")
-            Result.success(user)
+            // Теперь нужно получить JWT токен от backend
+            Log.d(TAG, "Запрос JWT токена от backend")
+            val jwtResult = getJwtTokenFromBackend(accessToken, user.email, user.name)
+            
+            jwtResult.fold(
+                onSuccess = { jwtUser ->
+                    // Сохраняем JWT токен и пользователя
+                    Log.d(TAG, "JWT токен получен, сохранение данных")
+                    preferencesManager.saveToken(jwtUser.token ?: accessToken)
+                    preferencesManager.saveUser(jwtUser.copy(authMethod = "yandex"))
+                    preferencesManager.clearOAuthState()
+                    Log.d(TAG, "Данные сохранены успешно")
+                    Log.d(TAG, "Авторизация завершена успешно")
+                    Result.success(jwtUser.copy(authMethod = "yandex"))
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "Ошибка при получении JWT токена: ${error.message}")
+                    // НЕ сохраняем данные при ошибке - пользователь должен увидеть ошибку
+                    // Очищаем OAuth state, чтобы можно было попробовать снова
+                    preferencesManager.clearOAuthState()
+                    Result.failure(error)
+                }
+            )
         } catch (e: Exception) {
             Log.e(TAG, "Исключение при обработке callback", e)
             Result.failure(e)
@@ -386,6 +414,39 @@ class YandexAuthManager @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "Исключение при получении информации о пользователе", e)
             null
+        }
+    }
+
+    /**
+     * Получает JWT токен от backend после успешной авторизации через YandexID
+     */
+    private suspend fun getJwtTokenFromBackend(yandexToken: String, email: String, name: String): Result<User> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Запрос JWT токена от backend для email: $email")
+            val request = com.trusttheroute.app.data.api.YandexAuthRequest(
+                yandexToken = yandexToken,
+                email = email,
+                name = name
+            )
+            
+            val response = authApi.authWithYandex(request)
+            
+            if (response.isSuccessful && response.body() != null) {
+                val authResponse = response.body()!!
+                Log.d(TAG, "JWT токен успешно получен от backend")
+                Result.success(authResponse.user.copy(token = authResponse.token))
+            } else {
+                val errorBody = try {
+                    response.errorBody()?.string()
+                } catch (e: Exception) {
+                    null
+                }
+                Log.e(TAG, "Ошибка при получении JWT токена: code=${response.code()}, body=$errorBody")
+                Result.failure(Exception("Failed to get JWT token from backend: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Исключение при получении JWT токена", e)
+            Result.failure(e)
         }
     }
 }

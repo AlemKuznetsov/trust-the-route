@@ -43,6 +43,29 @@ data class ResetPasswordRequest(
 )
 
 @Serializable
+data class UpdateProfileRequest(
+    val name: String
+)
+
+@Serializable
+data class ChangePasswordRequest(
+    val oldPassword: String,
+    val newPassword: String
+)
+
+@Serializable
+data class DeleteAccountRequest(
+    val confirmationText: String
+)
+
+@Serializable
+data class YandexAuthRequest(
+    val yandexToken: String,
+    val email: String,
+    val name: String
+)
+
+@Serializable
 data class AuthResponse(
     val user: User,
     val token: String

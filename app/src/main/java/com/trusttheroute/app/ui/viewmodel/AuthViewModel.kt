@@ -35,6 +35,9 @@ class AuthViewModel @Inject constructor(
     private val _isLoggedIn = MutableStateFlow<Boolean?>(null)
     val isLoggedIn: StateFlow<Boolean?> = _isLoggedIn.asStateFlow()
 
+    private val _currentUser = MutableStateFlow<User?>(null)
+    val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
+
     init {
         // Сбрасываем состояние авторизации при инициализации
         _authState.value = AuthUiState.Idle
@@ -57,9 +60,18 @@ class AuthViewModel @Inject constructor(
             try {
                 val loggedIn = authRepository.isLoggedIn()
                 _isLoggedIn.value = loggedIn
+                if (loggedIn) {
+                    _currentUser.value = authRepository.getCurrentUser()
+                }
             } catch (e: Exception) {
                 _isLoggedIn.value = false
             }
+        }
+    }
+
+    fun loadCurrentUser() {
+        viewModelScope.launch {
+            _currentUser.value = authRepository.getCurrentUser()
         }
     }
 
@@ -109,6 +121,7 @@ class AuthViewModel @Inject constructor(
                     onSuccess = { user ->
                         _authState.value = AuthUiState.Success(user)
                         _isLoggedIn.value = true
+                        _currentUser.value = user
                     },
                     onFailure = { error ->
                         _authState.value = AuthUiState.Error(error.message ?: "Ошибка входа")
@@ -164,9 +177,71 @@ class AuthViewModel @Inject constructor(
             try {
                 authRepository.logout()
                 _isLoggedIn.value = false
+                _currentUser.value = null
                 _authState.value = AuthUiState.Idle
             } catch (e: Exception) {
                 _authState.value = AuthUiState.Error("Ошибка выхода: ${e.message}")
+            }
+        }
+    }
+
+    fun updateProfile(name: String) {
+        viewModelScope.launch {
+            try {
+                _authState.value = AuthUiState.Loading
+                val result = authRepository.updateProfile(name)
+                result.fold(
+                    onSuccess = { user ->
+                        _authState.value = AuthUiState.Success(user)
+                        _currentUser.value = user
+                    },
+                    onFailure = { error ->
+                        _authState.value = AuthUiState.Error(error.message ?: "Ошибка обновления профиля")
+                    }
+                )
+            } catch (e: Exception) {
+                _authState.value = AuthUiState.Error("Ошибка обновления профиля: ${e.message}")
+            }
+        }
+    }
+
+    fun changePassword(oldPassword: String, newPassword: String) {
+        viewModelScope.launch {
+            try {
+                _authState.value = AuthUiState.Loading
+                val result = authRepository.changePassword(oldPassword, newPassword)
+                result.fold(
+                    onSuccess = { message ->
+                        _authState.value = AuthUiState.Message(message)
+                    },
+                    onFailure = { error ->
+                        _authState.value = AuthUiState.Error(error.message ?: "Ошибка смены пароля")
+                    }
+                )
+            } catch (e: Exception) {
+                _authState.value = AuthUiState.Error("Ошибка смены пароля: ${e.message}")
+            }
+        }
+    }
+
+    fun deleteAccount(confirmationText: String) {
+        viewModelScope.launch {
+            try {
+                _authState.value = AuthUiState.Loading
+                val result = authRepository.deleteAccount(confirmationText)
+                result.fold(
+                    onSuccess = {
+                        authRepository.logout()
+                        _isLoggedIn.value = false
+                        _currentUser.value = null
+                        _authState.value = AuthUiState.Message("Аккаунт успешно удален")
+                    },
+                    onFailure = { error ->
+                        _authState.value = AuthUiState.Error(error.message ?: "Ошибка удаления аккаунта")
+                    }
+                )
+            } catch (e: Exception) {
+                _authState.value = AuthUiState.Error("Ошибка удаления аккаунта: ${e.message}")
             }
         }
     }

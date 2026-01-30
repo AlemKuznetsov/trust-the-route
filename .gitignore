@@ -127,3 +127,144 @@ gradle-app.setting
 *.tmp
 *.bak
 *.cache
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Backend (Kotlin/JVM)
+backend/build/
+backend/.gradle/
+backend/out/
+backend/.idea/
+*.jar
+*.war
+*.ear
+*.classpath
+*.project
+*.settings/
+target/
+
+# Node.js (если используется)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# IDE - дополнительные файлы
+.vscode/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Android Studio - дополнительные файлы
+.gradle/
+local.properties
+*.hprof
+*.logcat
+*.logcat.*
+
+# Backup files
+*.orig
+*.rej
+*_backup
+*.backup
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# SSH keys (если случайно попали в проект)
+*.pem
+*.key
+id_rsa*
+*.pub
+!*.pub.example
+
+# Scripts output
+*.sh.log
+*.ps1.log
+
+# Documentation build
+docs/_build/
+site/
+
+# macOS - дополнительные
+.AppleDouble
+.LSOverride
+Icon
+
+# Windows - дополнительные
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# Compressed files (если не нужны в репозитории)
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+!gradle-wrapper.jar
+
+# Test coverage
+.nyc_output/
+coverage/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Misc
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini

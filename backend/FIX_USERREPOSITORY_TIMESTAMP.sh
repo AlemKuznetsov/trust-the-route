@@ -1,3 +1,13 @@
+#!/bin/bash
+# Исправление UserRepository.kt - замена Timestamp на LocalDateTime
+
+cd ~/trust-the-route-backend/backend
+
+echo "=== Исправление UserRepository.kt ==="
+echo ""
+
+# Создаем исправленный файл
+cat > src/main/kotlin/com/trusttheroute/backend/repositories/UserRepository.kt << 'EOF'
 package com.trusttheroute.backend.repositories
 
 import com.trusttheroute.backend.models.Users
@@ -6,8 +16,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
 import java.util.*
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
+import java.time.LocalDateTime
 
 class UserRepository {
     
@@ -25,7 +34,7 @@ class UserRepository {
                 
                 // Создать пользователя
                 val newUserId = UUID.randomUUID()
-                val currentTime = Clock.System.now()
+                val currentTime = LocalDateTime.now()
                 Users.insert {
                     it[Users.id] = newUserId
                     it[Users.email] = email
@@ -69,7 +78,7 @@ class UserRepository {
                 
                 // Создать пользователя
                 val newUserId = UUID.randomUUID()
-                val currentTime = Clock.System.now()
+                val currentTime = LocalDateTime.now()
                 Users.insert {
                     it[Users.id] = newUserId
                     it[Users.email] = email
@@ -154,7 +163,7 @@ class UserRepository {
                 val uuid = UUID.fromString(userId)
                 Users.update({ Users.id eq uuid }) {
                     it[Users.name] = name
-                    it[Users.updatedAt] = Clock.System.now()
+                    it[Users.updatedAt] = LocalDateTime.now()
                 }
                 getUserById(userId)
             } catch (e: Exception) {
@@ -175,7 +184,7 @@ class UserRepository {
                         val newPasswordHash = BCrypt.hashpw(newPassword, BCrypt.gensalt())
                         Users.update({ Users.id eq uuid }) {
                             it[Users.passwordHash] = newPasswordHash
-                            it[Users.updatedAt] = Clock.System.now()
+                            it[Users.updatedAt] = LocalDateTime.now()
                         }
                         true
                     } else {
@@ -197,8 +206,7 @@ class UserRepository {
                 val uuid = UUID.fromString(userId)
                 val userExists = Users.select { Users.id eq uuid }.count() > 0
                 if (userExists) {
-                    val query = "DELETE FROM ${Users.tableName} WHERE ${Users.id.name} = '${uuid}'"
-                    exec(query)
+                    Users.deleteWhere { Users.id eq uuid }
                     true
                 } else {
                     false
@@ -210,3 +218,25 @@ class UserRepository {
         }
     }
 }
+EOF
+
+echo "✅ Файл UserRepository.kt исправлен"
+echo ""
+echo "Проверяем импорты:"
+grep -E "import.*(Timestamp|LocalDateTime)" src/main/kotlin/com/trusttheroute/backend/repositories/UserRepository.kt
+echo ""
+echo "Собираем проект:"
+./gradlew clean build 2>&1 | tail -40
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Сборка успешна!"
+    echo ""
+    echo "Перезапускаем сервис:"
+    sudo systemctl restart trust-the-route-backend
+    sleep 3
+    sudo systemctl status trust-the-route-backend --no-pager | head -20
+else
+    echo ""
+    echo "❌ Ошибка сборки. Проверьте вывод выше."
+fi

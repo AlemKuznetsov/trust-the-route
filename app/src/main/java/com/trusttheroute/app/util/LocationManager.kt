@@ -46,12 +46,15 @@ class LocationManager @Inject constructor(
             return@callbackFlow
         }
 
+        // Используем BALANCED_POWER_ACCURACY для баланса между точностью и скоростью
+        // Это обеспечивает хорошую точность без излишнего расхода батареи
         val locationRequest = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY,
+            Priority.PRIORITY_BALANCED_POWER_ACCURACY, // Оптимизированный приоритет
             intervalMillis
         )
             .setMinUpdateIntervalMillis(intervalMillis)
             .setMaxUpdateDelayMillis(intervalMillis * 2)
+            .setWaitForAccurateLocation(false) // Не ждать высокой точности для быстрого старта
             .build()
 
         locationCallback = object : LocationCallback() {
@@ -83,28 +86,36 @@ class LocationManager @Inject constructor(
         return try {
             // Сначала пытаемся получить последнее известное местоположение
             val lastLocation = fusedLocationClient.lastLocation.result
-            if (lastLocation != null && lastLocation.time > System.currentTimeMillis() - 60000) {
-                // Если местоположение свежее (менее минуты назад), используем его
-                android.util.Log.d("LocationManager", "Используется свежее последнее местоположение")
+            val currentTime = System.currentTimeMillis()
+            val fiveMinutesAgo = currentTime - 300000L // 5 минут
+            
+            if (lastLocation != null && lastLocation.time > fiveMinutesAgo) {
+                // Если местоположение свежее (менее 5 минут назад), используем его сразу
+                android.util.Log.d("LocationManager", "Используется свежее последнее местоположение (${(currentTime - lastLocation.time) / 1000} сек назад)")
                 return lastLocation
             }
             
             // Если последнее местоположение устарело или отсутствует, запрашиваем новое
             android.util.Log.d("LocationManager", "Запрос нового местоположения...")
+            
+            // Используем BALANCED_POWER_ACCURACY для быстрого первого определения
+            // Это использует GPS + WiFi + сотовые сети, что быстрее чем только GPS
             val locationRequest = LocationRequest.Builder(
-                Priority.PRIORITY_HIGH_ACCURACY,
-                1000L // 1 секунда
+                Priority.PRIORITY_BALANCED_POWER_ACCURACY, // Быстрее чем HIGH_ACCURACY
+                500L // 0.5 секунды для быстрого ответа
             )
-                .setMaxUpdateDelayMillis(5000L) // Максимальная задержка 5 секунд
+                .setMaxUpdateDelayMillis(3000L) // Максимальная задержка 3 секунды
+                .setWaitForAccurateLocation(false) // Не ждать высокой точности для первого определения
                 .build()
             
-            // Используем await для получения одного обновления местоположения
-            kotlinx.coroutines.withTimeout(10000L) { // Таймаут 10 секунд
+            // Уменьшенный таймаут для быстрого ответа
+            kotlinx.coroutines.withTimeout(5000L) { // Таймаут 5 секунд вместо 10
                 kotlinx.coroutines.suspendCancellableCoroutine<Location?> { continuation ->
                     val callback = object : LocationCallback() {
                         override fun onLocationResult(result: LocationResult) {
                             result.lastLocation?.let { location ->
                                 fusedLocationClient.removeLocationUpdates(this)
+                                android.util.Log.d("LocationManager", "Получено новое местоположение: lat=${location.latitude}, lng=${location.longitude}, accuracy=${location.accuracy}m")
                                 continuation.resume(location) {}
                             }
                         }
@@ -122,16 +133,26 @@ class LocationManager @Inject constructor(
                 }
             }
         } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-            android.util.Log.w("LocationManager", "Таймаут при получении местоположения")
-            // В случае таймаута возвращаем последнее известное местоположение
+            android.util.Log.w("LocationManager", "Таймаут при получении местоположения, используем последнее известное")
+            // В случае таймаута возвращаем последнее известное местоположение (даже если устарело)
+            try {
+                val fallbackLocation = fusedLocationClient.lastLocation.result
+                if (fallbackLocation != null) {
+                    android.util.Log.d("LocationManager", "Используется fallback местоположение: lat=${fallbackLocation.latitude}, lng=${fallbackLocation.longitude}")
+                }
+                fallbackLocation
+            } catch (ex: Exception) {
+                android.util.Log.e("LocationManager", "Ошибка при получении fallback местоположения", ex)
+                null
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("LocationManager", "Ошибка при получении местоположения", e)
+            // В случае ошибки тоже пробуем вернуть последнее известное местоположение
             try {
                 fusedLocationClient.lastLocation.result
             } catch (ex: Exception) {
                 null
             }
-        } catch (e: Exception) {
-            android.util.Log.e("LocationManager", "Ошибка при получении местоположения", e)
-            null
         }
     }
 
