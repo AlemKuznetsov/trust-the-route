@@ -11,12 +11,17 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,13 +35,25 @@ fun RouteDetailsScreen(
     routeId: String,
     onBackClick: () -> Unit,
     onContinueClick: () -> Unit,
+    onViewAllReviews: () -> Unit = {},
     viewModel: RouteDetailsViewModel = hiltViewModel()
 ) {
     val route by viewModel.route.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val reviews by viewModel.reviews.collectAsState()
+    val isLoadingReviews by viewModel.isLoadingReviews.collectAsState()
 
     LaunchedEffect(routeId) {
+        android.util.Log.d("RouteDetailsScreen", "Loading route: $routeId")
         viewModel.loadRoute(routeId)
+    }
+    
+    // Отслеживаем изменения reviews для отладки
+    LaunchedEffect(reviews.size) {
+        android.util.Log.d("RouteDetailsScreen", "Reviews count changed: ${reviews.size}")
+        reviews.forEachIndexed { index, review ->
+            android.util.Log.d("RouteDetailsScreen", "Review $index: rating=${review.rating}, review=${review.review?.take(30)}")
+        }
     }
 
     if (isLoading) {
@@ -61,7 +78,11 @@ fun RouteDetailsScreen(
 
     val currentRoute = route!!
     val isDarkTheme = isDarkTheme()
-    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val gradientColors = if (isDarkTheme) {
+        listOf(MainMenuDarkTop, MainMenuDarkBottom)
+    } else {
+        listOf(MainMenuLightTop, MainMenuLightBottom)
+    }
     val headerColor = if (isDarkTheme) DarkSurface else BluePrimary
     val headerTextColor = if (isDarkTheme) Blue400 else White
     val density = LocalDensity.current
@@ -70,7 +91,7 @@ fun RouteDetailsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(brush = Brush.verticalGradient(colors = gradientColors))
     ) {
         // Верхняя панель
         TopAppBar(
@@ -393,12 +414,85 @@ fun RouteDetailsScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+            
+            // Отзывы пользователей
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isDarkTheme) DarkSurface else White
+                ),
+                border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(1.dp, DarkBorder) else null,
+                elevation = if (!isDarkTheme) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Отзывы пользователей",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDarkTheme) Blue400 else BluePrimary
+                    )
+                    
+                    if (isLoadingReviews) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        }
+                    } else if (reviews.isEmpty()) {
+                        Text(
+                            text = "Пока нет отзывов",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurfaceVariant
+                        )
+                    } else {
+                        // Показываем первые 3 отзыва
+                        val reviewsToShow = if (reviews.size > 3) reviews.take(3) else reviews
+                        
+                        reviewsToShow.forEach { review ->
+                            ReviewItem(review = review, isDarkTheme = isDarkTheme)
+                            if (review != reviewsToShow.last()) {
+                                Divider(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    color = if (isDarkTheme) DarkSurfaceVariant else LightSurfaceVariant
+                                )
+                            }
+                        }
+                        
+                        // Кнопка "Посмотреть все" если отзывов больше 3
+                        if (reviews.size > 3) {
+                            TextButton(
+                                onClick = onViewAllReviews,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "Посмотреть все (${reviews.size})",
+                                    color = if (isDarkTheme) Blue400 else BluePrimary
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = Icons.Default.ChevronRight,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = if (isDarkTheme) Blue400 else BluePrimary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
         // Кнопки внизу (зафиксированы)
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = backgroundColor,
+            color = if (isDarkTheme) MainMenuDarkBottom else MainMenuLightBottom,
             shadowElevation = if (!isDarkTheme) 8.dp else 0.dp
             // Убраны границы карточки
         ) {
@@ -445,6 +539,80 @@ fun RouteDetailsScreen(
                 }
             }
             }
+        }
+    }
+}
+
+@Composable
+fun ReviewItem(
+    review: com.trusttheroute.app.domain.model.RouteReview,
+    isDarkTheme: Boolean
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = review.userName ?: "Пользователь",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = if (isDarkTheme) Blue400 else BluePrimary
+                )
+                // Звезды оценки
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    for (i in 1..5) {
+                        Icon(
+                            imageVector = if (i <= review.rating) Icons.Default.Star else Icons.Default.StarBorder,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = if (i <= review.rating) Color(0xFFFFD700) else {
+                                if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurfaceVariant
+                            }
+                        )
+                    }
+                }
+            }
+            Text(
+                text = formatReviewDate(review.createdAt),
+                style = MaterialTheme.typography.bodySmall,
+                color = if (isDarkTheme) DarkOnSurfacePlaceholder else LightOnSurfaceVariant
+            )
+        }
+        
+        if (!review.review.isNullOrBlank()) {
+            Text(
+                text = review.review,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurfaceVariant
+            )
+        }
+    }
+}
+
+fun formatReviewDate(timestamp: Long): String {
+    val now = System.currentTimeMillis()
+    val diff = now - timestamp
+    
+    return when {
+        diff < 60_000 -> "только что"
+        diff < 3600_000 -> "${diff / 60_000} мин назад"
+        diff < 86400_000 -> "${diff / 3600_000} ч назад"
+        diff < 604800_000 -> "${diff / 86400_000} дн назад"
+        else -> {
+            val date = java.util.Date(timestamp)
+            val format = java.text.SimpleDateFormat("dd.MM.yyyy", java.util.Locale("ru"))
+            format.format(date)
         }
     }
 }

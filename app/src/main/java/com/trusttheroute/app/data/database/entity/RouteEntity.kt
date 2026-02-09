@@ -17,5 +17,6 @@ data class RouteEntity(
     val duration: String = "", // Средняя продолжительность поездки
     val interval: String = "", // Интервал автобуса
     val startPoint: String = "", // Откуда начинать экскурсию
+    val averageRating: Double = 0.0, // Средняя оценка маршрута
     val lastUpdated: Long = System.currentTimeMillis()
 )

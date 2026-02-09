@@ -44,6 +44,7 @@ fun MapScreen(
     onNavigateToRoutes: () -> Unit,
     onNavigateToMainMenu: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onFinishRoute: (String, String, List<String>) -> Unit = { _, _, _ -> },
     viewModel: MapViewModel = hiltViewModel()
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -272,6 +273,42 @@ fun MapScreen(
                     },
                     colors = NavigationDrawerItemDefaults.colors(
                         selectedContainerColor = if (isDarkTheme) DarkSurfaceVariant else Color.Unspecified
+                    )
+                )
+                
+                Divider(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    color = if (isDarkTheme) DarkSurfaceVariant else LightSurfaceVariant
+                )
+                
+                NavigationDrawerItem(
+                    icon = { 
+                        Icon(
+                            Icons.Default.CheckCircle, 
+                            contentDescription = null,
+                            tint = if (isDarkTheme) Color(0xFF4ADE80) else Color(0xFF16A34A)
+                        ) 
+                    },
+                    label = { 
+                        Text(
+                            "Завершить экскурсию",
+                            color = if (isDarkTheme) Color(0xFF4ADE80) else Color(0xFF16A34A),
+                            fontWeight = FontWeight.Medium
+                        ) 
+                    },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        val route = uiState.route
+                        val visitedAttractions = viewModel.getVisitedAttractions()
+                        if (route != null) {
+                            onFinishRoute(route.id, route.name, visitedAttractions)
+                        }
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(
+                        selectedContainerColor = if (isDarkTheme) DarkSurfaceVariant else Color.Unspecified,
+                        unselectedIconColor = if (isDarkTheme) Color(0xFF4ADE80) else Color(0xFF16A34A),
+                        unselectedTextColor = if (isDarkTheme) Color(0xFF4ADE80) else Color(0xFF16A34A)
                     )
                 )
             }

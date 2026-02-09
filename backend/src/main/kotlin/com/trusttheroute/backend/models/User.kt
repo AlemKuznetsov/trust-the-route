@@ -21,7 +21,8 @@ data class User(
     val id: String,
     val email: String,
     val name: String,
-    val token: String? = null
+    val token: String? = null,
+    val createdAt: String? = null // ISO 8601 формат даты
 )
 
 @Serializable

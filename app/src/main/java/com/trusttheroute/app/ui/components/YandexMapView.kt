@@ -320,8 +320,8 @@ private fun updateRouteAndAttractions(
                 val point = Point(attraction.latitude, attraction.longitude)
                 val placemark = mapObjects.addPlacemark(point)
                 
-            // Create Bitmap from vector drawable for better compatibility
-            val drawable = context.getDrawable(R.drawable.ic_attraction_marker)
+            // Create Bitmap from drawable (PNG or vector) for better compatibility
+            val drawable = context.getDrawable(R.drawable.attraction_marker)
             if (drawable != null) {
                 val bitmap = android.graphics.Bitmap.createBitmap(
                     (64 * context.resources.displayMetrics.density).toInt(),
@@ -339,9 +339,9 @@ private fun updateRouteAndAttractions(
                 iconStyle.anchor = PointF(0.5f, 1.0f) // Anchor at bottom center
                 placemark.setIconStyle(iconStyle)
 
-                android.util.Log.d("YandexMapView", "Золотистый маркер установлен для: ${attraction.name}, placemark visible: ${placemark.isVisible}")
+                android.util.Log.d("YandexMapView", "Маркер достопримечательности установлен для: ${attraction.name}, placemark visible: ${placemark.isVisible}")
             } else {
-                android.util.Log.e("YandexMapView", "Drawable for ic_attraction_marker not found")
+                android.util.Log.e("YandexMapView", "Drawable for attraction_marker not found")
                 }
                 
                 placemark.userData = attraction

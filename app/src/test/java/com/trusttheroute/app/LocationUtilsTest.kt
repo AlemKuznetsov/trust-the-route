@@ -98,4 +98,103 @@ class LocationUtilsTest {
         assertNotNull("Should find nearest attraction", nearest)
         assertEquals("Near Attraction", nearest?.name)
     }
+
+    @Test
+    fun `test findNearestAttraction returns null for empty list`() {
+        val nearest = LocationUtils.findNearestAttraction(55.7559, 37.6174, emptyList())
+        assertNull("Should return null for empty list", nearest)
+    }
+
+    @Test
+    fun `test findAttractionsInRadius returns correct attractions`() {
+        val attractions = listOf(
+            Attraction(
+                id = "1",
+                routeId = "route1",
+                name = "Near Attraction 1",
+                description = "Test",
+                latitude = 55.7558,
+                longitude = 37.6173,
+                imageUrl = "",
+                audioUrl = ""
+            ),
+            Attraction(
+                id = "2",
+                routeId = "route1",
+                name = "Near Attraction 2",
+                description = "Test",
+                latitude = 55.7559,
+                longitude = 37.6174,
+                imageUrl = "",
+                audioUrl = ""
+            ),
+            Attraction(
+                id = "3",
+                routeId = "route1",
+                name = "Far Attraction",
+                description = "Test",
+                latitude = 55.7600,
+                longitude = 37.6200,
+                imageUrl = "",
+                audioUrl = ""
+            )
+        )
+
+        val userLat = 55.7558
+        val userLon = 37.6173
+
+        val nearby = LocationUtils.findAttractionsInRadius(userLat, userLon, attractions, 200)
+
+        assertEquals("Should find 2 nearby attractions", 2, nearby.size)
+        assertTrue("Should contain Near Attraction 1", nearby.any { it.id == "1" })
+        assertTrue("Should contain Near Attraction 2", nearby.any { it.id == "2" })
+        assertFalse("Should not contain Far Attraction", nearby.any { it.id == "3" })
+    }
+
+    @Test
+    fun `test findAttractionsInRadius returns empty list when no attractions in radius`() {
+        val attractions = listOf(
+            Attraction(
+                id = "1",
+                routeId = "route1",
+                name = "Far Attraction",
+                description = "Test",
+                latitude = 55.7600,
+                longitude = 37.6200,
+                imageUrl = "",
+                audioUrl = ""
+            )
+        )
+
+        val userLat = 55.7558
+        val userLon = 37.6173
+
+        val nearby = LocationUtils.findAttractionsInRadius(userLat, userLon, attractions, 100)
+
+        assertTrue("Should return empty list", nearby.isEmpty())
+    }
+
+    @Test
+    fun `test isNearAttraction returns false when too close`() {
+        val attraction = Attraction(
+            id = "1",
+            routeId = "route1",
+            name = "Test Attraction",
+            description = "Test",
+            latitude = 55.7558,
+            longitude = 37.6173,
+            imageUrl = "",
+            audioUrl = ""
+        )
+
+        // Пользователь на том же месте (0 метров)
+        val isNear = LocationUtils.isNearAttraction(55.7558, 37.6173, attraction, 50, 100)
+        assertFalse("Should not be near when too close", isNear)
+    }
+
+    @Test
+    fun `test calculateDistance returns zero for same coordinates`() {
+        val distance = LocationUtils.calculateDistance(55.7558, 37.6173, 55.7558, 37.6173)
+        assertEquals("Distance should be zero", 0f, distance, 0.1f)
+    }
 }

@@ -2,7 +2,13 @@ package com.trusttheroute.app.ui.screens.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
@@ -14,10 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trusttheroute.app.ui.theme.*
@@ -28,6 +36,8 @@ import com.trusttheroute.app.ui.viewmodel.AuthUiState
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onBackClick: () -> Unit,
+    onPrivacyPolicyClick: () -> Unit = {},
+    onTermsOfServiceClick: () -> Unit = {},
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val authState by authViewModel.authState.collectAsState()
@@ -41,6 +51,8 @@ fun RegisterScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var termsAccepted by remember { mutableStateOf(false) }
+    var privacyAccepted by remember { mutableStateOf(false) }
     
     // Обработка успешной регистрации
     LaunchedEffect(authState) {
@@ -56,9 +68,9 @@ fun RegisterScreen(
     }
     
     val gradientColors = if (isDarkTheme) {
-        listOf(DarkBackground, DarkSurface, DarkBackground)
+        listOf(MainMenuDarkTop, MainMenuDarkBottom)
     } else {
-        listOf(CyanAccent.copy(alpha = 0.1f), LightBackground)
+        listOf(MainMenuLightTop, MainMenuLightBottom)
     }
     
     Column(
@@ -91,7 +103,9 @@ fun RegisterScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp)
+                .windowInsetsPadding(WindowInsets.navigationBars), // Учитываем системную панель навигации
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -189,6 +203,120 @@ fun RegisterScreen(
                 )
             )
             
+            // Согласие на обработку персональных данных
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp), // Добавляем вертикальный отступ для лучшей видимости
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Checkbox(
+                    checked = privacyAccepted,
+                    onCheckedChange = { privacyAccepted = it },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = if (isDarkTheme) Blue400 else BluePrimary
+                    )
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                val privacyText = buildAnnotatedString {
+                    val defaultColor = if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurfaceVariant
+                    val linkColor = if (isDarkTheme) Blue400 else BluePrimary
+                    
+                    withStyle(style = SpanStyle(color = defaultColor)) {
+                        append("Я согласен на ")
+                    }
+                    pushStringAnnotation(
+                        tag = "privacy",
+                        annotation = "privacy_policy"
+                    )
+                    withStyle(
+                        style = SpanStyle(
+                            color = linkColor,
+                            textDecoration = TextDecoration.Underline
+                        )
+                    ) {
+                        append("обработку персональных данных")
+                    }
+                    pop()
+                }
+                ClickableText(
+                    text = privacyText,
+                    style = TextStyle(
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                        lineHeight = MaterialTheme.typography.bodySmall.lineHeight,
+                        letterSpacing = MaterialTheme.typography.bodySmall.letterSpacing
+                    ),
+                    modifier = Modifier.weight(1f),
+                    onClick = { offset ->
+                        privacyText.getStringAnnotations(
+                            tag = "privacy",
+                            start = offset,
+                            end = offset
+                        ).firstOrNull()?.let {
+                            onPrivacyPolicyClick()
+                        }
+                    }
+                )
+            }
+            
+            // Принятие пользовательского соглашения
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp), // Добавляем вертикальный отступ для лучшей видимости
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Checkbox(
+                    checked = termsAccepted,
+                    onCheckedChange = { termsAccepted = it },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = if (isDarkTheme) Blue400 else BluePrimary
+                    )
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                val termsText = buildAnnotatedString {
+                    val defaultColor = if (isDarkTheme) DarkOnSurfaceVariant else LightOnSurfaceVariant
+                    val linkColor = if (isDarkTheme) Blue400 else BluePrimary
+                    
+                    withStyle(style = SpanStyle(color = defaultColor)) {
+                        append("Я принимаю ")
+                    }
+                    pushStringAnnotation(
+                        tag = "terms",
+                        annotation = "terms_of_service"
+                    )
+                    withStyle(
+                        style = SpanStyle(
+                            color = linkColor,
+                            textDecoration = TextDecoration.Underline
+                        )
+                    ) {
+                        append("пользовательское соглашение")
+                    }
+                    pop()
+                }
+                ClickableText(
+                    text = termsText,
+                    style = TextStyle(
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                        lineHeight = MaterialTheme.typography.bodySmall.lineHeight,
+                        letterSpacing = MaterialTheme.typography.bodySmall.letterSpacing
+                    ),
+                    modifier = Modifier.weight(1f),
+                    onClick = { offset ->
+                        termsText.getStringAnnotations(
+                            tag = "terms",
+                            start = offset,
+                            end = offset
+                        ).firstOrNull()?.let {
+                            onTermsOfServiceClick()
+                        }
+                    }
+                )
+            }
+            
             // Сообщение об ошибке
             errorMessage?.let { error ->
                 Text(
@@ -199,7 +327,7 @@ fun RegisterScreen(
                 )
             }
             
-            // Кнопка регистрации
+            // Кнопка регистрации с дополнительным отступом снизу
             Button(
                 onClick = {
                     when {
@@ -215,6 +343,12 @@ fun RegisterScreen(
                         !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
                             errorMessage = "Введите корректный email"
                         }
+                        !privacyAccepted -> {
+                            errorMessage = "Необходимо согласие на обработку персональных данных"
+                        }
+                        !termsAccepted -> {
+                            errorMessage = "Необходимо принять пользовательское соглашение"
+                        }
                         else -> {
                             authViewModel.register(email, password, name)
                         }
@@ -222,7 +356,8 @@ fun RegisterScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(56.dp)
+                    .padding(bottom = 16.dp), // Дополнительный отступ снизу
                 enabled = authState !is AuthUiState.Loading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = BluePrimary
@@ -237,6 +372,9 @@ fun RegisterScreen(
                     Text("Зарегистрироваться", fontWeight = FontWeight.Bold)
                 }
             }
+            
+            // Дополнительный отступ для системной панели навигации
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

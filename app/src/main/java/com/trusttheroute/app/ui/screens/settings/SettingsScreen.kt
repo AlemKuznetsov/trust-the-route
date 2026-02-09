@@ -41,27 +41,20 @@ fun SettingsScreen(
     onAboutClick: () -> Unit = {}
 ) {
     val isDarkTheme = isDarkTheme()
-    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
-    // Градиентный фон
+    // Градиентный фон как в главном меню
     val gradientBrush = if (isDarkTheme) {
-        Brush.linearGradient(
+        Brush.verticalGradient(
             colors = listOf(
-                DarkBackground,  // slate-900
-                DarkSurface,      // slate-800
-                DarkBackground    // slate-900
-            ),
-            start = androidx.compose.ui.geometry.Offset(0f, 0f),
-            end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
+                MainMenuDarkTop,   // #0F172A
+                MainMenuDarkBottom // #020617
+            )
         )
     } else {
-        Brush.linearGradient(
+        Brush.verticalGradient(
             colors = listOf(
-                Color(0xFFEFF6FF), // blue-50
-                Color(0xFFFFFFFF), // white
-                Color(0xFFECFEFF)  // cyan-50
-            ),
-            start = androidx.compose.ui.geometry.Offset(0f, 0f),
-            end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
+                MainMenuLightTop,     // #FFFFFF
+                MainMenuLightBottom   // #F2F5F9
+            )
         )
     }
     
@@ -308,7 +301,7 @@ fun SettingsCategoryCard(
                 contentDescription = null,
                 tint = if (isDarkTheme) DarkOnSurfaceDescription else LightOnSurfaceVariant,
                 modifier = Modifier
-                    .size(20.dp)
+                    .size(24.dp)
                     .offset(x = chevronOffset)
             )
         }

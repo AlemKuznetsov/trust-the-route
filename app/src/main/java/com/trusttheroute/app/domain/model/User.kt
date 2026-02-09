@@ -5,5 +5,6 @@ data class User(
     val email: String,
     val name: String,
     val token: String? = null,
-    val authMethod: String? = null // "yandex" или null (для email/password)
+    val authMethod: String? = null, // "yandex" или null (для email/password)
+    val createdAt: String? = null // ISO 8601 формат даты регистрации
 )

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,14 +37,18 @@ fun RoutesScreen(
     val routes by viewModel.routes.collectAsState(initial = emptyList())
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isDarkTheme = isDarkTheme()
-    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val gradientColors = if (isDarkTheme) {
+        listOf(MainMenuDarkTop, MainMenuDarkBottom)
+    } else {
+        listOf(MainMenuLightTop, MainMenuLightBottom)
+    }
     val headerColor = if (isDarkTheme) DarkSurface else BluePrimary
     val headerTextColor = if (isDarkTheme) Blue400 else White
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(brush = Brush.verticalGradient(colors = gradientColors))
     ) {
         // Верхняя панель
         TopAppBar(
@@ -58,7 +63,8 @@ fun RoutesScreen(
                     Icon(
                         Icons.Default.ArrowBack, 
                         "Назад",
-                        tint = if (isDarkTheme) Blue400 else White
+                        tint = if (isDarkTheme) Blue400 else White,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             },
@@ -203,11 +209,32 @@ fun RouteCard(
                     fontWeight = FontWeight.Bold,
                     color = if (isDarkTheme) Blue400 else LightOnSurface
                 )
-                Text(
-                    text = route.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (isDarkTheme) DarkOnSurfacePlaceholder else LightOnSurfaceVariant
-                )
+                // Отображаем среднюю оценку вместо названия маршрута
+                if (route.averageRating > 0) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = Color(0xFFFFD700)
+                        )
+                        Text(
+                            text = String.format("%.1f", route.averageRating),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = if (isDarkTheme) Color(0xFF4ADE80) else Color(0xFF16A34A)
+                        )
+                    }
+                } else {
+                    Text(
+                        text = route.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (isDarkTheme) DarkOnSurfacePlaceholder else LightOnSurfaceVariant
+                    )
+                }
             }
             
             // Стрелка

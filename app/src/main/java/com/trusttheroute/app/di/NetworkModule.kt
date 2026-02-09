@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import com.google.gson.Gson
 import com.trusttheroute.app.data.api.AuthApi
+import com.trusttheroute.app.data.api.MediaApi
 import com.trusttheroute.app.data.api.NotificationApi
 import com.trusttheroute.app.data.api.RouteApi
 import com.trusttheroute.app.util.AuthInterceptor
@@ -55,8 +56,8 @@ object NetworkModule {
             .addInterceptor(authInterceptor) // Добавляем interceptor для авторизации
             .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS) // Увеличен для загрузки файлов
+            .writeTimeout(60, TimeUnit.SECONDS) // Увеличен для загрузки файлов
             .build()
     }
 
@@ -86,5 +87,11 @@ object NetworkModule {
     @Singleton
     fun provideNotificationApi(retrofit: Retrofit): NotificationApi {
         return retrofit.create(NotificationApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMediaApi(retrofit: Retrofit): MediaApi {
+        return retrofit.create(MediaApi::class.java)
     }
 }

@@ -11,7 +11,7 @@ import com.trusttheroute.app.data.database.entity.RouteEntity
 
 @Database(
     entities = [RouteEntity::class, AttractionEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -84,6 +84,13 @@ abstract class AppDatabase : RoomDatabase() {
                 
                 // Создаем индекс
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_attractions_routeId ON attractions(routeId)")
+            }
+        }
+        
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Добавляем колонку averageRating в таблицу routes
+                database.execSQL("ALTER TABLE routes ADD COLUMN averageRating REAL NOT NULL DEFAULT 0.0")
             }
         }
     }

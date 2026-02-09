@@ -30,12 +30,18 @@ fun AboutScreen(
     onBackClick: () -> Unit
 ) {
     val isDarkTheme = isDarkTheme()
-    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val gradientColors = if (isDarkTheme) {
+        listOf(MainMenuDarkTop, MainMenuDarkBottom)
+    } else {
+        listOf(MainMenuLightTop, MainMenuLightBottom)
+    }
     val headerColor = if (isDarkTheme) DarkSurface else CyanAccent
     val headerTextColor = if (isDarkTheme) Blue400 else White
     
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(brush = Brush.verticalGradient(colors = gradientColors))
     ) {
         TopAppBar(
             title = { 
@@ -72,7 +78,6 @@ fun AboutScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .background(backgroundColor)
                 .padding(horizontal = 16.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {

@@ -12,6 +12,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.google.android.gms.tasks.Task
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -85,7 +86,12 @@ class LocationManager @Inject constructor(
         }
         return try {
             // Сначала пытаемся получить последнее известное местоположение
-            val lastLocation = fusedLocationClient.lastLocation.result
+            val lastLocation = try {
+                fusedLocationClient.lastLocation.toSuspend()
+            } catch (e: Exception) {
+                android.util.Log.d("LocationManager", "Не удалось получить последнее местоположение: ${e.message}")
+                null
+            }
             val currentTime = System.currentTimeMillis()
             val fiveMinutesAgo = currentTime - 300000L // 5 минут
             
@@ -96,7 +102,12 @@ class LocationManager @Inject constructor(
             }
             
             // Если последнее местоположение устарело или отсутствует, запрашиваем новое
-            android.util.Log.d("LocationManager", "Запрос нового местоположения...")
+            if (lastLocation != null) {
+                val ageMinutes = (currentTime - lastLocation.time) / 60000
+                android.util.Log.d("LocationManager", "Запрос нового местоположения (последнее было ${ageMinutes} мин назад)...")
+            } else {
+                android.util.Log.d("LocationManager", "Запрос нового местоположения (последнее неизвестно)...")
+            }
             
             // Используем BALANCED_POWER_ACCURACY для быстрого первого определения
             // Это использует GPS + WiFi + сотовые сети, что быстрее чем только GPS
@@ -133,12 +144,22 @@ class LocationManager @Inject constructor(
                 }
             }
         } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-            android.util.Log.w("LocationManager", "Таймаут при получении местоположения, используем последнее известное")
-            // В случае таймаута возвращаем последнее известное местоположение (даже если устарело)
+            android.util.Log.w("LocationManager", "Таймаут при получении местоположения (5 сек), используем последнее известное")
+            // В случае таймаута возвращаем последнее известное местоположение
             try {
-                val fallbackLocation = fusedLocationClient.lastLocation.result
+                val fallbackLocation = fusedLocationClient.lastLocation.toSuspend()
                 if (fallbackLocation != null) {
-                    android.util.Log.d("LocationManager", "Используется fallback местоположение: lat=${fallbackLocation.latitude}, lng=${fallbackLocation.longitude}")
+                    val currentTime = System.currentTimeMillis()
+                    val ageSeconds = (currentTime - fallbackLocation.time) / 1000
+                    val ageMinutes = ageSeconds / 60
+                    
+                    if (ageMinutes < 60) {
+                        android.util.Log.d("LocationManager", "Используется fallback местоположение: lat=${fallbackLocation.latitude}, lng=${fallbackLocation.longitude}, возраст=${ageMinutes} мин, точность=${fallbackLocation.accuracy}m")
+                    } else {
+                        android.util.Log.w("LocationManager", "Используется старое fallback местоположение: lat=${fallbackLocation.latitude}, lng=${fallbackLocation.longitude}, возраст=${ageMinutes} мин (${ageSeconds / 3600} часов), точность=${fallbackLocation.accuracy}m")
+                    }
+                } else {
+                    android.util.Log.w("LocationManager", "Fallback местоположение недоступно")
                 }
                 fallbackLocation
             } catch (ex: Exception) {
@@ -149,7 +170,7 @@ class LocationManager @Inject constructor(
             android.util.Log.e("LocationManager", "Ошибка при получении местоположения", e)
             // В случае ошибки тоже пробуем вернуть последнее известное местоположение
             try {
-                fusedLocationClient.lastLocation.result
+                fusedLocationClient.lastLocation.toSuspend()
             } catch (ex: Exception) {
                 null
             }
@@ -160,6 +181,24 @@ class LocationManager @Inject constructor(
         locationCallback?.let {
             fusedLocationClient.removeLocationUpdates(it)
             locationCallback = null
+        }
+    }
+
+    /**
+     * Конвертирует Google Play Services Task в suspend функцию
+     */
+    private suspend fun <T> Task<T>.toSuspend(): T = suspendCancellableCoroutine { continuation ->
+        addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                continuation.resume(task.result) {}
+            } else {
+                val exception = task.exception ?: Exception("Task failed")
+                continuation.resumeWith(Result.failure(exception))
+            }
+        }
+        continuation.invokeOnCancellation {
+            // Task не поддерживает явную отмену, но мы можем просто не обрабатывать результат
+            // если continuation была отменена
         }
     }
 }

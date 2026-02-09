@@ -80,7 +80,7 @@ class YandexPushService @Inject constructor(
             )
             
             val notificationBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(notification.title)
                 .setContentText(notification.body)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(notification.body))
@@ -144,7 +144,7 @@ class YandexPushService @Inject constructor(
         inboxStyle.setSummaryText(summaryText)
         
         val summaryNotification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Trust The Route")
             .setContentText("У вас ${notifications.size} новых уведомлений")
             .setStyle(inboxStyle)

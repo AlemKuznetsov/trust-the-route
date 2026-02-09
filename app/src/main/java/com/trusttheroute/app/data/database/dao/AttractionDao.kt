@@ -26,4 +26,10 @@ interface AttractionDao {
 
     @Query("DELETE FROM attractions")
     suspend fun deleteAllAttractions()
+    
+    @Query("UPDATE attractions SET imageUrls = :imageUrls WHERE id = :attractionId")
+    suspend fun updateImageUrls(attractionId: String, imageUrls: String)
+    
+    @Query("UPDATE attractions SET audioUrl = :audioUrl WHERE id = :attractionId")
+    suspend fun updateAudioUrl(attractionId: String, audioUrl: String)
 }

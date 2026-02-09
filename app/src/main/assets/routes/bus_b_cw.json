@@ -66,7 +66,13 @@
         "attraction_1_photo_2.jpg",
         "attraction_1_photo_3.jpg"
       ],
-      "audioFileName": "attraction_1.mp3"
+      "audioFileName": "attraction_1.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_1_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_1_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_1_photo_3.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_1.mp3"
     },
     {
       "id": "attraction_2",
@@ -81,7 +87,14 @@
         "attraction_2_photo_3.jpg",
         "attraction_2_photo_4.jpg"
       ],
-      "audioFileName": "attraction_2.mp3"
+      "audioFileName": "attraction_2.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_2_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_2_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_2_photo_3.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_2_photo_4.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_2.mp3"
     },
     {
       "id": "attraction_3",
@@ -96,14 +109,21 @@
         "attraction_3_photo_3.jpg",
         "attraction_3_photo_4.jpg"
       ],
-      "audioFileName": "attraction_3.mp3"
+      "audioFileName": "attraction_3.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_3_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_3_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_3_photo_3.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_3_photo_4.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_3.mp3"
     },
     {
       "id": "attraction_4",
       "name": "Посольство США и Дом-музей Ф.И. Шаляпина",
       "description": "Пожалуйста, обратите внимание на большое здание с флагом США — это посольство Соединённых Штатов Америки в России. Оно расположено в самом центре Москвы и занимает внушительный особняк в классическом стиле с элементами неоклассицизма.\n\nПосольство США в Москве имеет долгую и сложную историю, отражающую отношения двух стран. Здание было построено в 1910-х годах и изначально принадлежало российскому дворянству. После революции и значительных политических перемен здесь размещались различные государственные учреждения, а в советский период оно стало дипломатическим представлением США. Сегодня посольство является не только центром дипломатической деятельности, но и символом взаимодействия, переговоров и международных отношений.\n\nОбратите внимание на строгую архитектуру здания — высокий фасад с колоннами и декоративными элементами, которые подчёркивают его статус и важность. Несмотря на строгость, здесь есть и свои уникальные детали, которые делают здание узнаваемым и символичным.\n\nТеперь взгляните чуть правее, за зелёной оградой и деревьями, где находится уютное двухэтажное здание с белоснежным фасадом и зелёной крышей. Это дом-музей выдающегося русского певца и артиста Фёдора Ивановича Шаляпина.\n\nШаляпин — одна из самых ярких фигур в истории оперного искусства, известный своим глубоким драматизмом и мощным голосом. Музей-усадьба, расположенная в этом доме, сохраняет атмосферу жизни и творчества великого артиста. Здесь можно увидеть личные вещи Шаляпина, редкие фотографии, документы и экспонаты, рассказывающие о его непростой, но блестящей карьере.\n\nЗдание музея построено в традиционном стиле русской усадьбы конца девятнадцатого века. Его архитектура более тёплая и живая, чем у посольства, создающая ощущение домашнего уюта и гостеприимства. Усадьба окружена ухоженным садом, где Шаляпин любил проводить время и отдыхать.\n\nЭтот музей — не просто памятник певцу, но и важное культурное пространство, которое помогает понять и прочувствовать эпоху, когда жил и творил один из величайших оперных певцов мира.\n\nТак, проходя мимо этих двух очень разных зданий, мы видим отражение важнейших страниц российской истории — от дипломатии и международных отношений, до искусства и культуры, которые формируют облик и дух Москвы.",
       "latitude": 55.755729,
-      "longitude": 37.582960,
+      "longitude": 37.58296,
       "order": 4,
       "imageFileNames": [
         "attraction_4_photo_1.jpg",
@@ -111,7 +131,14 @@
         "attraction_4_photo_3.jpg",
         "attraction_4_photo_4.jpg"
       ],
-      "audioFileName": "attraction_4.mp3"
+      "audioFileName": "attraction_4.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_4_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_4_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_4_photo_3.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_4_photo_4.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_4.mp3"
     },
     {
       "id": "attraction_5",
@@ -126,7 +153,14 @@
         "attraction_5_photo_3.jpg",
         "attraction_5_photo_4.jpg"
       ],
-      "audioFileName": "attraction_5.mp3"
+      "audioFileName": "attraction_5.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_5_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_5_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_5_photo_3.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_5_photo_4.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_5.mp3"
     },
     {
       "id": "attraction_6",
@@ -141,7 +175,14 @@
         "attraction_6_photo_3.jpg",
         "attraction_6_photo_4.jpg"
       ],
-      "audioFileName": "attraction_6.mp3"
+      "audioFileName": "attraction_6.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_6_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_6_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_6_photo_3.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_6_photo_4.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_6.mp3"
     },
     {
       "id": "attraction_7",
@@ -156,7 +197,14 @@
         "attraction_7_photo_3.jpg",
         "attraction_7_photo_4.jpg"
       ],
-      "audioFileName": "attraction_7.mp3"
+      "audioFileName": "attraction_7.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_7_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_7_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_7_photo_3.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_7_photo_4.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_7.mp3"
     },
     {
       "id": "attraction_8",
@@ -170,7 +218,13 @@
         "attraction_8_photo_2.jpg",
         "attraction_8_photo_3.jpg"
       ],
-      "audioFileName": "attraction_8.mp3"
+      "audioFileName": "attraction_8.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_8_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_8_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_8_photo_3.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_8.mp3"
     },
     {
       "id": "attraction_9",
@@ -185,7 +239,14 @@
         "attraction_9_photo_3.jpg",
         "attraction_9_photo_4.jpg"
       ],
-      "audioFileName": "attraction_9.mp3"
+      "audioFileName": "attraction_9.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_9_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_9_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_9_photo_3.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_9_photo_4.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_9.mp3"
     },
     {
       "id": "attraction_10",
@@ -200,7 +261,14 @@
         "attraction_10_photo_3.jpg",
         "attraction_10_photo_4.jpg"
       ],
-      "audioFileName": "attraction_10.mp3"
+      "audioFileName": "attraction_10.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_10_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_10_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_10_photo_3.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_10_photo_4.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_10.mp3"
     },
     {
       "id": "attraction_11",
@@ -214,7 +282,13 @@
         "attraction_11_photo_2.jpg",
         "attraction_11_photo_3.jpg"
       ],
-      "audioFileName": "attraction_11.mp3"
+      "audioFileName": "attraction_11.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_11_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_11_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_11_photo_3.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_11.mp3"
     },
     {
       "id": "attraction_12",
@@ -226,7 +300,11 @@
       "imageFileNames": [
         "attraction_12_photo_1.jpg"
       ],
-      "audioFileName": "attraction_12.mp3"
+      "audioFileName": "attraction_12.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_12_photo_1.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_12.mp3"
     },
     {
       "id": "attraction_13",
@@ -240,13 +318,19 @@
         "attraction_13_photo_2.jpg",
         "attraction_13_photo_3.jpg"
       ],
-      "audioFileName": "attraction_13.mp3"
+      "audioFileName": "attraction_13.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_13_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_13_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_13_photo_3.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_13.mp3"
     },
     {
       "id": "attraction_14",
       "name": "Высотное здание у Красных ворот",
       "description": "Сейчас слева от нас — высотное здание на площади Красных Ворот, одна из семи знаменитых сталинских высоток Москвы. Но прежде чем говорить о самом здании, давайте обратимся к истории этого места, потому что именно она во многом определила его значение и символику.\n\n🏛 Почему площадь называется Красные Ворота и где они сегодня?\nИстория этого места начинается в начале XVIII века. В 1709 году, по указанию Петра I, здесь была построена триумфальная арка в честь победы русской армии над шведами в Полтавской битве. Это были деревянные Красные ворота — слово «красные» в те времена означало «красивые, парадные».\n\nСо временем арка неоднократно перестраивалась, а в 1753 году была возведена уже каменная триумфальная арка по проекту архитектора Дмитрия Ухтомского. Она была выполнена в бело-красных тонах, украшена восьмью золочёными скульптурами, а венчал её позолоченный ангел — символ победы и небесного покровительства. Красные ворота стали одной из архитектурных доминант въезда в Москву со стороны северо-востока.\n\n⚒️ После революции декоративное убранство арки было демонтировано, а в 1927 году, несмотря на протесты архитекторов и градозащитников, Красные ворота разобрали окончательно. Сегодня на их месте расположен вестибюль станции метро «Красные Ворота», а фигура того самого ангела теперь украшает лестницу Исторического музея.\n\n🏙 Именно на этом исторически значимом месте в середине XX века было решено построить одну из сталинских высоток.\nПервый проект предложил архитектор Алексей Душкин, автор многих станций московского метро. Позже к работе присоединился архитектор Борис Мезенцев. Высотка задумывалась не просто как дом, а как многофункциональный комплекс, тесно связанный с транспортной системой города.\n\n🚇 Согласно замыслу архитекторов, один из выходов метро должен был находиться прямо внутри здания. В таких случаях строительство обычно велось последовательно: сначала подземная часть, затем надземная. Однако это увеличивало сроки почти на полтора года, а Иосиф Сталин потребовал закончить строительство быстрее. В результате было принято крайне сложное и рискованное решение — строить метро и высотку одновременно.\n\n🧊 Строителей ожидала ещё одна серьёзная проблема — неустойчивые, водонасыщенные грунты. Для её решения применили уникальную по тем временам технологию заморозки грунта.\nБыло пробурено 230 скважин, в которые на глубину 27 метров опустили трубы с хлористым кальцием, охлаждённым до температуры от минус 20 до минус 26 градусов. Вся почва вокруг фундамента превратилась в подобие ледяного монолита.\n\n📐 Но самым сложным этапом стала не сама заморозка, а момент её отключения. После разморозки грунт неизбежно должен был дать осадку. Архитекторы пошли на инженерный риск: здание изначально возводили с наклоном около 16 градусов, рассчитывая, что после проседания оно встанет строго вертикально.\n\n✔️ Почти всё пошло по плану. После завершения работ здание действительно выровнялось, хотя сохранилось незначительное отклонение — около 1,5 градуса, которое, впрочем, не влияет на его устойчивость и безопасность.\n\n🏗 Высотка была завершена в 1953 году.\nПо композиции она отличается от других сталинских высоток: здесь нет шпиля, а сама форма кажется более строгой и вытянутой. Это объясняется как ограниченным участком застройки, так и близостью Садового кольца.\n\n🏛 Фасад центрального корпуса облицован красным гранитом и известняком, что подчёркивает его монументальность. Боковые корпуса выполнены из бетона — это было сделано в целях экономии, поскольку строительство велось в послевоенные годы. Первоначально здание планировали украсить шестью скульптурными композициями, они были изготовлены и даже установлены, но в период борьбы с архитектурными излишествами их демонтировали.\n\n🏢 Функционально здание разделено на части.\nВ центральном корпусе с момента постройки размещались организации, связанные с транспортом, а также коммерческие структуры. В боковых крыльях находятся жилые квартиры.\n\n👥 Жильё здесь считалось престижным. Квартиры получили министры, учёные, актёры, высокопоставленные специалисты и даже сам архитектор здания. Планировки отличались просторными комнатами, высокими потолками и хорошей шумоизоляцией.\n\n🛡 В подземной части здания, как и во всех сталинских высотках, были оборудованы гараж и бомбоубежище, рассчитанное на длительное автономное пребывание — обязательный элемент эпохи холодной войны.\n\n📌 Таким образом, высотное здание на площади Красных Ворот — это не просто один из символов сталинской архитектуры. Это памятник инженерной смелости, пример того, как история места — от триумфальной арки Петра I до подземных технологий XX века — буквально вросла в архитектуру Москвы.\n\n🎧 Сегодня эта высотка остаётся важной частью городского силуэта и напоминает нам о времени, когда архитектура была не просто строительством, а заявлением о мощи, будущем и амбициях государства.",
-      "latitude": 55.769100,
+      "latitude": 55.7691,
       "longitude": 37.647387,
       "order": 14,
       "imageFileNames": [
@@ -255,7 +339,14 @@
         "attraction_14_photo_3.jpg",
         "attraction_14_photo_4.jpg"
       ],
-      "audioFileName": "attraction_14.mp3"
+      "audioFileName": "attraction_14.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_14_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_14_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_14_photo_3.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_14_photo_4.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_14.mp3"
     },
     {
       "id": "attraction_15",
@@ -269,14 +360,20 @@
         "attraction_15_photo_2.jpg",
         "attraction_15_photo_3.jpg"
       ],
-      "audioFileName": "attraction_15.mp3"
+      "audioFileName": "attraction_15.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_15_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_15_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_15_photo_3.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_15.mp3"
     },
     {
       "id": "attraction_16",
       "name": "Высокояузский мост, Высотное здание на Котельнической набережной",
       "description": "Сейчас, когда мы пересекаем реку Яуза по Высокояузскому мосту, обратите внимание вправо — перед вами Жилой дом на Котельнической набережной, один из самых знаковых символов Москвы и выдающийся памятник советской архитектуры.\n\nЭтот дом — часть знаменитого ансамбля семи сталинских высоток, которые были построены в послевоенные годы как символ величия и мощи Советского Союза. Работы над зданием начались в 1947 году, сразу после окончания Второй мировой войны, и продолжались до 1952-го. Высотка была возведена на месте старых промышленных построек, где ранее располагались мстерскИ е и склады, что символизировало превращение индустриального района в престижную жилую зону.\n\nАрхитектором здания стал Дмитрий Чечулин, который создавал проект в духе сталинского ампира — стиля, соединяющего классическую монументальность с декоративными элементами, характерными для советской эпохи. Центральная башня здания достигает 25 этажей, а её шпиль с декоративной звездой возвышается почти на 176 метров, делая его одним из самых высоких жилых домов Европы того времени.\n\nОсобое внимание уделялось архитектурным деталям. Фасады украшены колоннами и пилястрами, на шпиле и фронтонах можно заметить символику СССР — серпы, молоты и звёзды. Каждый декоративный элемент создавался не случайно: он должен был отражать мощь государства, торжественность эпохи и одновременно создавать ощущение гармонии и порядка.\n\nДом задумывался как престижное жильё для элиты Москвы. Здесь селились партийные деятели, ученые, известные артисты и военные. Квартиры в центральной башне были просторными, с высокими потолками и большим количеством комнат, что делало их редкостью и символом высокого статуса. Внутренние интерьеры украшали лепнина, декоративная штукатурка, мраморные элементы — всё для того, чтобы жильцы ощущали величие эпохи.\n\nЖилой дом на Котельнической набережной также выполнял городскую функцию ориентира: его силуэт легко узнаётся с разных точек Москвы, особенно с воды. Купол и шпиль видны издалека, отражаясь в воде Яузы и создавая живописную панораму, особенно на рассвете и закате.\n\nСтроительство дома совпало с периодом масштабного восстановления Москвы после войны. В те годы город переживал быстрый рост населения и необходимость возводить жильё для специалистов и государственных служащих. Высотка на Котельнической набережной стала не просто домом, а манифестом новой эпохи, демонстрирующим инженерные возможности и амбиции советской столицы.\n\nСо временем здание превратилось в историческую и культурную ценность. Оно не только хранит память о послевоенной Москве, но и остаётся важной частью городского ландшафта. Сегодня здесь по-прежнему живут семьи, а сам дом — популярный объект для фотографий и экскурсионных маршрутов, ведь его силуэт стал символом сочетания истории и современности.\n\nТаким образом, проходя мимо этого здания, вы видите не просто жилой комплекс, а настоящий памятник эпохе, воплощение архитектурной дерзости, инженерного мастерства и исторического символизма, который отражает стремление Москвы к величию после тяжёлых военных лет.",
       "latitude": 55.750482,
-      "longitude": 37.655740,
+      "longitude": 37.65574,
       "order": 16,
       "imageFileNames": [
         "attraction_16_photo_1.jpg",
@@ -284,7 +381,14 @@
         "attraction_16_photo_3.jpg",
         "attraction_16_photo_4.jpg"
       ],
-      "audioFileName": "attraction_16.mp3"
+      "audioFileName": "attraction_16.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_16_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_16_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_16_photo_3.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_16_photo_4.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_16.mp3"
     },
     {
       "id": "attraction_17",
@@ -299,7 +403,14 @@
         "attraction_17_photo_3.jpg",
         "attraction_17_photo_4.jpg"
       ],
-      "audioFileName": "attraction_17.mp3"
+      "audioFileName": "attraction_17.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_17_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_17_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_17_photo_3.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_17_photo_4.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_17.mp3"
     },
     {
       "id": "attraction_18",
@@ -314,7 +425,14 @@
         "attraction_18_photo_3.jpg",
         "attraction_18_photo_4.jpg"
       ],
-      "audioFileName": "attraction_18.mp3"
+      "audioFileName": "attraction_18.mp3",
+      "imageUrls": [
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_18_photo_1.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_18_photo_2.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_18_photo_3.jpg",
+        "https://storage.yandexcloud.net/trust-the-route-media/images/routes/bus_b_cw/attraction_18_photo_4.jpg"
+      ],
+      "audioUrl": "https://storage.yandexcloud.net/trust-the-route-media/audio/routes/bus_b_cw/attraction_18.mp3"
     }
   ]
 }

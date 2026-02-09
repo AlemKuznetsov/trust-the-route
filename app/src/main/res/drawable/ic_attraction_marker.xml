@@ -1,17 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="32dp"
-    android:height="32dp"
-    android:viewportWidth="32"
-    android:viewportHeight="32">
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
     
-    <!-- Золотистый круг (маркер достопримечательности) -->
+    <!-- Форма пин-маркера (перевернутая капля) -->
+    <!-- Основное тело маркера - верхняя часть (красно-оранжевая) -->
     <path
-        android:fillColor="#ffaf24"
-        android:pathData="M16,28c-6.6,0 -12,-5.4 -12,-12s5.4,-12 12,-12s12,5.4 12,12s-5.4,12 -12,12z"/>
+        android:fillColor="#FF6B35"
+        android:pathData="M32,16 C43.05,16 52,24.95 52,36 C52,40 50,43 47,45 L32,45 L17,45 C14,43 12,40 12,36 C12,24.95 20.95,16 32,16 Z"/>
     
-    <!-- Белый круг внутри для контраста -->
+    <!-- Средняя часть (оранжевая) -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M16,22c-3.3,0 -6,-2.7 -6,-6s2.7,-6 6,-6s6,2.7 6,6s-2.7,6 -6,6z"/>
+        android:fillColor="#FF8C42"
+        android:pathData="M32,36 C43.05,36 52,40 52,45 L32,45 L12,45 C12,40 20.95,36 32,36 Z"/>
+    
+    <!-- Нижняя часть (желто-оранжевая) -->
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M32,45 L47,45 L32,56 L17,45 Z"/>
+    
+    <!-- Острие пин-маркера (нижняя заостренная часть) -->
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M32,56 L28,64 L36,64 Z"/>
+    
+    <!-- Внешний круг (граница) - первый концентрический круг -->
+    <path
+        android:pathData="M32,52 C22.06,52 14,43.94 14,34 C14,24.06 22.06,16 32,16 C41.94,16 50,24.06 50,34 C50,43.94 41.94,52 32,52 Z"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FF6B35"
+        android:fillColor="#00000000" />
+    
+    <!-- Средний круг - второй концентрический круг -->
+    <path
+        android:pathData="M32,44 C26.48,44 22,39.52 22,34 C22,28.48 26.48,24 32,24 C37.52,24 42,28.48 42,34 C42,39.52 37.52,44 32,44 Z"
+        android:strokeWidth="2"
+        android:strokeColor="#FF8C42"
+        android:fillColor="#00000000" />
+    
+    <!-- Внутренний черный круг (центральная точка) - третий концентрический круг -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M32,38 C29.79,38 28,36.21 28,34 C28,31.79 29.79,30 32,30 C34.21,30 36,31.79 36,34 C36,36.21 34.21,38 32,38 Z"/>
 </vector>

@@ -25,6 +25,13 @@ object DatabaseConfig {
         Database.connect(dataSource)
     }
     
+    fun getConnection(): java.sql.Connection {
+        if (!::dataSource.isInitialized) {
+            throw IllegalStateException("DatabaseConfig not initialized. Call init() first.")
+        }
+        return dataSource.connection
+    }
+    
     fun close() {
         if (::dataSource.isInitialized) {
             dataSource.close()

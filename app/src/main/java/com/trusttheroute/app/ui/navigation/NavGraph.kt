@@ -24,6 +24,10 @@ import com.trusttheroute.app.ui.screens.settings.AccountSettingsScreen
 import com.trusttheroute.app.ui.screens.settings.UpdateProfileScreen
 import com.trusttheroute.app.ui.screens.settings.ChangePasswordScreen
 import com.trusttheroute.app.ui.screens.settings.DeleteAccountScreen
+import com.trusttheroute.app.ui.screens.settings.PrivacySecurityScreen
+import com.trusttheroute.app.ui.screens.settings.PrivacyPolicyScreen
+import com.trusttheroute.app.ui.screens.settings.TermsOfServiceScreen
+import com.trusttheroute.app.ui.screens.review.RouteReviewScreen
 
 sealed class Screen(val route: String) {
     object MainMenu : Screen("main_menu")
@@ -48,6 +52,12 @@ sealed class Screen(val route: String) {
     object UpdateProfile : Screen("update_profile")
     object ChangePassword : Screen("change_password")
     object DeleteAccount : Screen("delete_account")
+    object PrivacySecurity : Screen("privacy_security")
+    object PrivacyPolicy : Screen("privacy_policy")
+    object TermsOfService : Screen("terms_of_service")
+    object RouteReview : Screen("route_review/{routeId}") {
+        fun createRoute(routeId: String) = "route_review/$routeId"
+    }
 }
 
 @Composable
@@ -108,7 +118,36 @@ fun AppNavHost(
                 onBackClick = { navController.popBackStack() },
                 onNavigateToRoutes = { navController.navigate(Screen.Routes.route) },
                 onNavigateToMainMenu = { navController.navigate(Screen.MainMenu.route) },
-                onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                onFinishRoute = { rId, rName, visited ->
+                    navController.navigate(Screen.RouteReview.createRoute(rId)) {
+                        // Передаем данные через аргументы или сохраняем в ViewModel
+                    }
+                }
+            )
+        }
+        
+        composable(
+            route = Screen.RouteReview.route,
+            arguments = listOf(
+                navArgument("routeId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val reviewRouteId = backStackEntry.arguments?.getString("routeId") ?: ""
+            // Получаем данные из предыдущего экрана через SavedStateHandle
+            // Имя маршрута и список посещенных достопримечательностей передаются через ViewModel
+            RouteReviewScreen(
+                routeId = reviewRouteId,
+                routeName = "Маршрут", // Будет загружено из ViewModel
+                visitedAttractions = emptyList(), // Будет загружено из ViewModel
+                onBackClick = { navController.popBackStack() },
+                onReviewSubmitted = {
+                    navController.navigate(Screen.Routes.route) {
+                        popUpTo(Screen.MainMenu.route) { inclusive = false }
+                    }
+                }
             )
         }
 
@@ -119,7 +158,7 @@ fun AppNavHost(
                 onThemeClick = { navController.navigate(Screen.Theme.route) },
                 onNotificationsClick = { navController.navigate(Screen.Notifications.route) },
                 onFontSizeClick = { navController.navigate(Screen.FontSize.route) },
-                onPrivacyClick = { /* TODO: Navigate to privacy settings */ },
+                onPrivacyClick = { navController.navigate(Screen.PrivacySecurity.route) },
                 onAccountClick = { navController.navigate(Screen.AccountSettings.route) },
                 onAppInfoClick = { navController.navigate(Screen.AppInfo.route) },
                 onAboutClick = { navController.navigate(Screen.About.route) }
@@ -173,7 +212,9 @@ fun AppNavHost(
         composable(Screen.Register.route) {
             RegisterScreen(
                 onRegisterSuccess = { navController.navigate(Screen.MainMenu.route) },
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onPrivacyPolicyClick = { navController.navigate(Screen.PrivacyPolicy.route) },
+                onTermsOfServiceClick = { navController.navigate(Screen.TermsOfService.route) }
             )
         }
 
@@ -209,6 +250,26 @@ fun AppNavHost(
             DeleteAccountScreen(
                 onBackClick = { navController.popBackStack() },
                 onAccountDeleted = { navController.navigate(Screen.Login.route) { popUpTo(0) } }
+            )
+        }
+        
+        composable(Screen.PrivacySecurity.route) {
+            PrivacySecurityScreen(
+                onBackClick = { navController.popBackStack() },
+                onTermsOfServiceClick = { navController.navigate(Screen.TermsOfService.route) },
+                onPrivacyPolicyClick = { navController.navigate(Screen.PrivacyPolicy.route) }
+            )
+        }
+        
+        composable(Screen.PrivacyPolicy.route) {
+            PrivacyPolicyScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.TermsOfService.route) {
+            TermsOfServiceScreen(
+                onBackClick = { navController.popBackStack() }
             )
         }
     }

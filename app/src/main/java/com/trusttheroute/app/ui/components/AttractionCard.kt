@@ -111,6 +111,12 @@ fun AttractionCard(
                             routeId = attraction.routeId
                         )
                         
+                        // Логирование для отладки
+                        android.util.Log.d("AttractionCard", "Loading images for ${attraction.name}:")
+                        imageUrls.forEachIndexed { index, url ->
+                            android.util.Log.d("AttractionCard", "  Image $index: $url")
+                        }
+                        
                         if (imageUrls.isNotEmpty()) {
                             if (imageUrls.size == 1) {
                                 // Одно изображение - показываем полноразмерным

@@ -45,8 +45,7 @@ class NotificationWorker @AssistedInject constructor(
             val lastNotificationId = preferencesManager.lastNotificationId.first()
 
             // Запрашиваем новые уведомления
-            // TODO: Передать lastNotificationId как query параметр, когда API будет готово
-            val response = notificationApi.getNotifications(null)
+            val response = notificationApi.getNotifications(lastNotificationId)
             
             if (response.isSuccessful) {
                 val notifications = response.body() ?: emptyList()

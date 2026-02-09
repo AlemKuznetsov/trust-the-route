@@ -261,7 +261,7 @@ fun FontSizeOption(
                         imageVector = Icons.Default.Check,
                         contentDescription = null,
                         tint = if (isDarkTheme) Blue400 else BluePrimary,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }

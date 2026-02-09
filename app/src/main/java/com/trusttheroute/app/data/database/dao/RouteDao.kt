@@ -27,6 +27,12 @@ interface RouteDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRoutes(routes: List<RouteEntity>)
 
+    @Query("UPDATE routes SET averageRating = :averageRating WHERE id = :routeId")
+    suspend fun updateRouteRating(routeId: String, averageRating: Double)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateRoute(route: RouteEntity)
+
     @Query("DELETE FROM routes")
     suspend fun deleteAllRoutes()
 }

@@ -103,6 +103,9 @@ Desktop.ini
 secrets.properties
 api-keys.properties
 
+# Backend scripts with sensitive data (storage keys)
+backend/SETUP_STORAGE_ENV.sh
+
 # Android Studio 4+ (дополнительные файлы)
 .idea/deploymentTargetDropDown.xml
 .idea/render.experimental.xml

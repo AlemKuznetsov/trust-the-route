@@ -30,7 +30,8 @@ data class MapUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isAudioPlaying: Boolean = false,
-    val audioGuideEnabled: Boolean = true
+    val audioGuideEnabled: Boolean = true,
+    val visitedAttractions: Set<String> = emptySet() // ID посещенных достопримечательностей
 )
 
 @HiltViewModel
@@ -180,7 +181,19 @@ class MapViewModel @Inject constructor(
                     if (isAttractionCardManuallyOpened && _uiState.value.nearbyAttraction != null) {
                         isAttractionCardManuallyOpened = false
                     }
-                    _uiState.value = _uiState.value.copy(nearbyAttraction = attraction)
+                    
+                    // Отмечаем предыдущую достопримечательность как посещенную
+                    val previousAttraction = _uiState.value.nearbyAttraction
+                    val updatedVisited = if (previousAttraction != null) {
+                        _uiState.value.visitedAttractions + previousAttraction.id
+                    } else {
+                        _uiState.value.visitedAttractions
+                    }
+                    
+                    _uiState.value = _uiState.value.copy(
+                        nearbyAttraction = attraction,
+                        visitedAttractions = updatedVisited
+                    )
                     
                     // Автоматическое воспроизведение аудио, если включено
                     if (_uiState.value.audioGuideEnabled) {
@@ -277,8 +290,36 @@ class MapViewModel @Inject constructor(
 
     fun dismissAttractionCard() {
         isAttractionCardManuallyOpened = false // Сбрасываем флаг при закрытии карточки
-        _uiState.value = _uiState.value.copy(nearbyAttraction = null)
+        
+        // Отмечаем текущую достопримечательность как посещенную при закрытии карточки
+        val currentAttraction = _uiState.value.nearbyAttraction
+        val updatedVisited = if (currentAttraction != null) {
+            _uiState.value.visitedAttractions + currentAttraction.id
+        } else {
+            _uiState.value.visitedAttractions
+        }
+        
+        _uiState.value = _uiState.value.copy(
+            nearbyAttraction = null,
+            visitedAttractions = updatedVisited
+        )
         stopAudio()
+    }
+    
+    /**
+     * Получить список посещенных достопримечательностей
+     */
+    fun getVisitedAttractions(): List<String> {
+        return _uiState.value.visitedAttractions.toList()
+    }
+    
+    /**
+     * Получить прогресс прохождения маршрута (процент посещенных достопримечательностей)
+     */
+    fun getRouteProgress(): Float {
+        val totalAttractions = _uiState.value.attractions.size
+        if (totalAttractions == 0) return 0f
+        return (_uiState.value.visitedAttractions.size.toFloat() / totalAttractions) * 100f
     }
 
     suspend fun getCurrentLocation(): Location? {

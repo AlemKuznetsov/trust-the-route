@@ -3,7 +3,9 @@ package com.trusttheroute.app.ui.screens.auth
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -13,6 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -53,17 +58,16 @@ fun LoginScreen(
         }
     }
     
-    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    // Градиентный фон как в главном меню
     val gradientColors = if (isDarkTheme) {
         listOf(
-            DarkBackground,
-            DarkSurface,
-            DarkBackground
+            MainMenuDarkTop,   // #0F172A
+            MainMenuDarkBottom // #020617
         )
     } else {
         listOf(
-            CyanAccent.copy(alpha = 0.1f),
-            LightBackground
+            MainMenuLightTop,     // #FFFFFF
+            MainMenuLightBottom   // #F2F5F9
         )
     }
     
@@ -71,7 +75,9 @@ fun LoginScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(brush = Brush.verticalGradient(colors = gradientColors))
-            .padding(24.dp),
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp)
+            .windowInsetsPadding(WindowInsets.navigationBars), // Учитываем системную панель навигации
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -215,17 +221,28 @@ fun LoginScreen(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Ссылки
+        // Ссылки с дополнительным отступом снизу для системной панели навигации
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp), // Дополнительный отступ снизу
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             TextButton(onClick = onResetPasswordClick) {
-                Text("Забыли пароль?")
+                Text(
+                    "Забыли пароль?",
+                    color = if (isDarkTheme) Blue400 else BluePrimary
+                )
             }
             TextButton(onClick = onRegisterClick) {
-                Text("Регистрация")
+                Text(
+                    "Регистрация",
+                    color = if (isDarkTheme) Blue400 else BluePrimary
+                )
             }
         }
+        
+        // Дополнительный отступ для системной панели навигации
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }

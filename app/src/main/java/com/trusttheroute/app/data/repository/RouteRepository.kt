@@ -50,6 +50,8 @@ class RouteRepository @Inject constructor(
             try {
                 val routes = routeApi.getRoutes().body()
                 if (routes != null && routes.isNotEmpty()) {
+                    // НЕ загружаем оценки здесь - это слишком медленно и может вызывать проблемы
+                    // Оценки будут загружаться отдельно при необходимости
                     routeDao.insertRoutes(routes.map { it.toEntity() })
                     
                     // Sync attractions for each route
@@ -75,6 +77,14 @@ class RouteRepository @Inject constructor(
             val attractions = entities.map { it.toDomain() }
             android.util.Log.d("RouteRepository", "Mapped to ${attractions.size} attractions")
             attractions
+        }
+    }
+    
+    suspend fun updateRouteRating(routeId: String, averageRating: Double) {
+        try {
+            routeDao.updateRouteRating(routeId, averageRating)
+        } catch (e: Exception) {
+            android.util.Log.e("RouteRepository", "Error updating route rating", e)
         }
     }
 }

@@ -68,10 +68,47 @@ object StorageUrlHelper {
     ): List<String> {
         val result = mutableListOf<String>()
         
-        // Сначала добавляем облачные URL
+        android.util.Log.d("StorageUrlHelper", "getPrioritizedImageUrls: cloudUrls=${cloudUrls.size}, localPaths=${localPaths.size}, routeId=$routeId")
+        
+        // Обрабатываем cloudUrls - проверяем, являются ли они облачными или локальными
         cloudUrls.forEach { url ->
             if (url.isNotBlank() && url !in result) {
-                result.add(url)
+                when {
+                    // Если это уже облачный URL (http/https), добавляем как есть
+                    isCloudUrl(url) -> {
+                        android.util.Log.d("StorageUrlHelper", "Using cloud URL: $url")
+                        result.add(url)
+                    }
+                    // Если это локальный URL (file://), пытаемся преобразовать в облачный
+                    isLocalUrl(url) && routeId != null && Constants.USE_CLOUD_STORAGE_FIRST -> {
+                        // Извлекаем имя файла из локального пути
+                        val fileName = extractFileNameFromLocalUrl(url)
+                        if (fileName != null) {
+                            val cloudUrl = getCloudImageUrl(routeId, fileName)
+                            if (cloudUrl != null && cloudUrl !in result) {
+                                result.add(cloudUrl)
+                            } else {
+                                // Если не удалось сгенерировать облачный URL, используем локальный
+                                result.add(url)
+                            }
+                        } else {
+                            result.add(url)
+                        }
+                    }
+                    // Если это просто имя файла или относительный путь
+                    else -> {
+                        if (routeId != null && Constants.USE_CLOUD_STORAGE_FIRST) {
+                            val cloudUrl = getCloudImageUrl(routeId, url)
+                            if (cloudUrl != null && cloudUrl !in result) {
+                                result.add(cloudUrl)
+                            } else {
+                                result.add(url)
+                            }
+                        } else {
+                            result.add(url)
+                        }
+                    }
+                }
             }
         }
         
@@ -101,6 +138,31 @@ object StorageUrlHelper {
         }
         
         return result
+    }
+    
+    /**
+     * Извлекает имя файла из локального URL
+     * Например: "file:///android_asset/images/photo.jpg" -> "photo.jpg"
+     */
+    private fun extractFileNameFromLocalUrl(localUrl: String): String? {
+        return try {
+            // Убираем префикс "file:///android_asset/images/" или "file:///android_asset/audio/"
+            val prefix = "file:///android_asset/"
+            if (localUrl.startsWith(prefix)) {
+                val path = localUrl.substring(prefix.length)
+                // Убираем префикс "images/" или "audio/"
+                val parts = path.split("/")
+                if (parts.size >= 2) {
+                    parts.last()
+                } else {
+                    path
+                }
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
     }
     
     /**

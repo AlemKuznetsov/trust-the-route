@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.trusttheroute.app.data.auth.YandexAuthManager
 import com.trusttheroute.app.data.repository.AuthRepository
 import com.trusttheroute.app.domain.model.User
+import com.trusttheroute.app.service.DeviceRegistrationService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +27,8 @@ sealed class AuthUiState {
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val yandexAuthManager: YandexAuthManager
+    private val yandexAuthManager: YandexAuthManager,
+    private val deviceRegistrationService: DeviceRegistrationService
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
@@ -62,6 +64,8 @@ class AuthViewModel @Inject constructor(
                 _isLoggedIn.value = loggedIn
                 if (loggedIn) {
                     _currentUser.value = authRepository.getCurrentUser()
+                    // Регистрируем устройство для получения уведомлений
+                    deviceRegistrationService.registerDevice()
                 }
             } catch (e: Exception) {
                 _isLoggedIn.value = false
@@ -99,6 +103,8 @@ class AuthViewModel @Inject constructor(
                     onSuccess = { user ->
                         _authState.value = AuthUiState.Success(user)
                         _isLoggedIn.value = true
+                        // Регистрируем устройство для получения уведомлений
+                        deviceRegistrationService.registerDevice()
                     },
                     onFailure = { error ->
                         _authState.value = AuthUiState.Error(error.message ?: "Ошибка авторизации")
@@ -122,6 +128,8 @@ class AuthViewModel @Inject constructor(
                         _authState.value = AuthUiState.Success(user)
                         _isLoggedIn.value = true
                         _currentUser.value = user
+                        // Регистрируем устройство для получения уведомлений
+                        deviceRegistrationService.registerDevice()
                     },
                     onFailure = { error ->
                         _authState.value = AuthUiState.Error(error.message ?: "Ошибка входа")
@@ -142,6 +150,8 @@ class AuthViewModel @Inject constructor(
                     onSuccess = { user ->
                         _authState.value = AuthUiState.Success(user)
                         _isLoggedIn.value = true
+                        // Регистрируем устройство для получения уведомлений
+                        deviceRegistrationService.registerDevice()
                     },
                     onFailure = { error ->
                         _authState.value = AuthUiState.Error(error.message ?: "Ошибка регистрации")
@@ -176,6 +186,8 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 authRepository.logout()
+                // Отменяем регистрацию устройства при выходе
+                deviceRegistrationService.unregisterDevice()
                 _isLoggedIn.value = false
                 _currentUser.value = null
                 _authState.value = AuthUiState.Idle
@@ -242,6 +254,23 @@ class AuthViewModel @Inject constructor(
                 )
             } catch (e: Exception) {
                 _authState.value = AuthUiState.Error("Ошибка удаления аккаунта: ${e.message}")
+            }
+        }
+    }
+    
+    fun logoutFromAllDevices() {
+        viewModelScope.launch {
+            try {
+                // Пока просто выполняем обычный logout
+                // В будущем можно добавить API endpoint для выхода со всех устройств
+                authRepository.logout()
+                // Отменяем регистрацию устройства при выходе
+                deviceRegistrationService.unregisterDevice()
+                _isLoggedIn.value = false
+                _currentUser.value = null
+                _authState.value = AuthUiState.Message("Вы вышли со всех устройств")
+            } catch (e: Exception) {
+                _authState.value = AuthUiState.Error("Ошибка выхода: ${e.message}")
             }
         }
     }

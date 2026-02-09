@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trusttheroute.app.ui.theme.*
 import com.trusttheroute.app.ui.viewmodel.AuthViewModel
+import com.trusttheroute.app.util.DateFormatter
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -222,7 +223,7 @@ fun AccountSettingsScreen(
                 // Дата регистрации (read-only)
                 AccountInfoCard(
                     title = "Дата регистрации",
-                    value = "Не указано", // TODO: Добавить поле createdAt в User модель
+                    value = DateFormatter.formatRegistrationDate(currentUser?.createdAt),
                     icon = Icons.Default.CalendarToday,
                     onClick = null,
                     isDarkTheme = isDarkTheme
@@ -290,7 +291,7 @@ fun AccountInfoCard(
                     imageVector = Icons.Default.Edit,
                     contentDescription = "Редактировать",
                     tint = if (isDarkTheme) Blue400 else BluePrimary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }

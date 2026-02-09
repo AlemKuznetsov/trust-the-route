@@ -34,6 +34,8 @@ class PreferencesManager @Inject constructor(
         private val AUDIO_GUIDE_ENABLED_KEY = stringPreferencesKey("audio_guide_enabled")
         private val OAUTH_STATE_KEY = stringPreferencesKey("oauth_state")
         private val LAST_NOTIFICATION_ID_KEY = stringPreferencesKey("last_notification_id")
+        private val DEVICE_REGISTERED_KEY = booleanPreferencesKey("device_registered")
+        private val NOTIFICATION_PERMISSION_REQUESTED_KEY = booleanPreferencesKey("notification_permission_requested")
     }
 
     suspend fun saveToken(token: String) {
@@ -147,5 +149,27 @@ class PreferencesManager @Inject constructor(
 
     val lastNotificationId: Flow<String?> = context.dataStore.data.map {
         it[LAST_NOTIFICATION_ID_KEY]
+    }
+
+    suspend fun setDeviceRegistered(registered: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[DEVICE_REGISTERED_KEY] = registered
+        }
+    }
+
+    suspend fun getDeviceRegistered(): Flow<Boolean> {
+        return context.dataStore.data.map {
+            it[DEVICE_REGISTERED_KEY] ?: false
+        }
+    }
+
+    suspend fun setNotificationPermissionRequested(requested: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[NOTIFICATION_PERMISSION_REQUESTED_KEY] = requested
+        }
+    }
+
+    val notificationPermissionRequested: Flow<Boolean> = context.dataStore.data.map {
+        it[NOTIFICATION_PERMISSION_REQUESTED_KEY] ?: false
     }
 }

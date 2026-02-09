@@ -40,7 +40,8 @@ class UserRepository {
                 User(
                     id = userRow[Users.id].toString(),
                     email = userRow[Users.email],
-                    name = userRow[Users.name] ?: ""
+                    name = userRow[Users.name] ?: "",
+                    createdAt = userRow[Users.createdAt].toString()
                 )
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -59,7 +60,8 @@ class UserRepository {
                     return@transaction User(
                         id = existingUser[Users.id].toString(),
                         email = existingUser[Users.email],
-                        name = existingUser[Users.name] ?: name
+                        name = existingUser[Users.name] ?: name,
+                        createdAt = existingUser[Users.createdAt].toString()
                     )
                 }
                 
@@ -84,7 +86,8 @@ class UserRepository {
                 User(
                     id = userRow[Users.id].toString(),
                     email = userRow[Users.email],
-                    name = userRow[Users.name] ?: ""
+                    name = userRow[Users.name] ?: "",
+                    createdAt = userRow[Users.createdAt].toString()
                 )
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -99,7 +102,8 @@ class UserRepository {
                 User(
                     id = row[Users.id].toString(),
                     email = row[Users.email],
-                    name = row[Users.name] ?: ""
+                    name = row[Users.name] ?: "",
+                    createdAt = row[Users.createdAt].toString()
                 )
             }
         }
@@ -114,7 +118,8 @@ class UserRepository {
                     User(
                         id = userRow[Users.id].toString(),
                         email = userRow[Users.email],
-                        name = userRow[Users.name] ?: ""
+                        name = userRow[Users.name] ?: "",
+                        createdAt = userRow[Users.createdAt].toString()
                     )
                 } else {
                     null
@@ -139,7 +144,8 @@ class UserRepository {
                     User(
                         id = row[Users.id].toString(),
                         email = row[Users.email],
-                        name = row[Users.name] ?: ""
+                        name = row[Users.name] ?: "",
+                        createdAt = row[Users.createdAt].toString()
                     )
                 }
             } catch (e: Exception) {

@@ -29,7 +29,8 @@ fun RouteEntity.toDomain(): Route {
         stops = stopsList,
         duration = duration,
         interval = interval,
-        startPoint = startPoint
+        startPoint = startPoint,
+        averageRating = averageRating
     )
 }
 
@@ -47,7 +48,8 @@ fun Route.toEntity(): RouteEntity {
         stops = stopsJson,
         duration = duration,
         interval = interval,
-        startPoint = startPoint
+        startPoint = startPoint,
+        averageRating = averageRating
     )
 }
 
